@@ -1,4 +1,5 @@
-FROM java:8
-ADD target/eureka-0.0.1-SNAPSHOT.jar app.jar
+FROM openjdk:8-jre
+ARG JAR_FILE
+ADD target/${JAR_FILE} eurekaserver.jar
 EXPOSE 8761
-ENTRYPOINT ["java","-jar","/app.jar"]
+ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom", "-jar","eurekaserver.jar"]

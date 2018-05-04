@@ -3,16 +3,15 @@ server:
 
 management:
   context-path: /admin
-  
+
 logging:
   level:
+    com.netflix.discovery: 'OFF'
     org.springframework.cloud: 'DEBUG'
-    
+
 spring:
-  profiles:
-    active: native
   cloud:
     config:
       server:
-        native:
-          searchLocations: file:///steeltoe/config-repo
+        git:
+          uri: https://github.com/spring-cloud-samples/config-repo

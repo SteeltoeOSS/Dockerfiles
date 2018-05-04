@@ -1,0 +1,37 @@
+= SteeltoeOSS Docker Images
+
+== Building
+
+Build all images:
+----
+mvnw package
+----
+
+Build a specific image, e.g. ConfigServer:
+----
+mvnw package -pl linux/ConfigServer
+----
+
+== Running
+
+=== ConfigServer
+
+Run with no args to use the config repo at https://github.com/spring-cloud-samples/config-repo
+----
+docker run -it --rm -p8888:8888 steeltoeoss/configserver-0.0.2-SNAPSHOT
+----
+
+Sample using a local config:
+----
+docker run -it --rm -p 8888:8888 \
+    -v /path/to/my/config:/config \
+    steeltoeoss/configserver-0.0.2-SNAPSHOT \
+    --spring.profiles.active=native --spring.cloud.config.server.native.searchLocations=/config
+----
+
+=== EurekaServer
+
+----
+docker run -it --rm -8761:8761 steeltoeoss/eurekaserver-0.0.2-SNAPSHOT
+----
+
