@@ -11,7 +11,7 @@
     </parent>
     <groupId>io.steeltoe.samples.docker</groupId>
     <artifactId>parent</artifactId>
-    <version>0.0.2-SNAPSHOT</version>
+    <version>latest</version>
     <packaging>pom</packaging>
 
     <name>SteeltoeOSS Samples Docker Images</name>
