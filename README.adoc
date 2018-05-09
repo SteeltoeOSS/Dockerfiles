@@ -1,4 +1,11 @@
 = SteeltoeOSS Docker Images
+:toc: preamble
+:toclevels: 1
+:!toc-title:
+ifdef::env-github,env-browser[:outfilesuffix: .adoc]
+:linkattrs:
+
+GitHub repo for SteeltoeOSS Docker images.
 
 == Building
 
@@ -7,31 +14,21 @@ Build all images:
 $ mvnw package
 ----
 
-Build a specific image, e.g. ConfigServer:
+Build a specific image, e.g. steeltoeoss/configserver:
 ----
-$ mvnw package -pl linux/ConfigServer
-----
-
-== Running
-
-=== ConfigServer
-
-Run with no args to use the config repo at https://github.com/spring-cloud-samples/config-repo
-----
-$ docker run -it --rm -p8888:8888 steeltoeoss/configserver-0.0.2-SNAPSHOT
+$ mvnw package -pl configserver
 ----
 
-Sample using a local config:
-----
-$ docker run -it --rm -p 8888:8888 \
-    -v /path/to/my/config:/config \
-    steeltoeoss/configserver-0.0.2-SNAPSHOT \
-    --spring.profiles.active=native --spring.cloud.config.server.native.searchLocations=/config
-----
+== Images
 
-=== EurekaServer
 
-----
-$ docker run -it --rm -8761:8761 steeltoeoss/eurekaserver-0.0.2-SNAPSHOT
-----
+|===
+|Name |Description
 
+|link:configserver/README{outfilesuffix}[steeltoeoss/configserver]
+| Spring Cloud Config Server
+
+|link:eurekaserver/README{outfilesuffix}[steeltoeoss/eurekaserver]
+| Spring Cloud Eureka Server
+
+|===

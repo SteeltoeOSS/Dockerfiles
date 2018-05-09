@@ -17,8 +17,8 @@
     <name>SteeltoeOSS Samples Docker Images</name>
 
     <modules>
-        <module>linux/ConfigServer</module>
-        <module>linux/EurekaServer</module>
+        <module>configserver</module>
+        <module>eurekaserver</module>
     </modules>
 
     <properties>

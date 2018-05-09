@@ -7,7 +7,7 @@
         <groupId>io.steeltoe.samples.docker</groupId>
         <artifactId>parent</artifactId>
         <version>latest</version>
-        <relativePath>../../pom.xml</relativePath>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>eurekaserver</artifactId>
     <packaging>jar</packaging>

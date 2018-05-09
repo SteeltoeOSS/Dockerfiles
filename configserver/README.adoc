@@ -1,30 +1,54 @@
-# Config Server Sample
+= steeltoeoss/configserver
+:toc: preamble
+:toclevels: 1
+:!toc-title:
+:linkattrs:
 
-Run this project as a Spring Boot app, e.g. import into IDE and run
-main method, or use Maven: 
+SteeltoeOSS https://cloud.spring.io/spring-cloud-config/[Spring Cloud Config Server, window="_blank"] docker image.
 
-```
-$ ./mvnw spring-boot:run
-```
+== Running
 
-or
+By default, the server listens on port 8888 and gets it configuration from https://github.com/spring-cloud-samples/config-repo[window="_blank"].
 
-```
-$ ./mvnw package
-$ java -jar target/*.jar
-```
+[NOTE]
+Following examples omit common `docker` options such as `-p8888:8888` for purposes of brevity.
 
-It will start up on port 8888 and serve configuration data from
-"https://github.com/spring-cloud-samples/config-repo":
+.Default Configuration
+----
+$ docker run steeltoeoss/configserver
+----
 
-## Resources
+.Custom Git Repo Configuration
+----
+$ docker run steeltoeoss/configserver \
+    --spring.cloud.config.server.git.uri=https://github.com/myorg/myrepo
+----
 
-| Path             | Description  |
-|------------------|--------------|
-| /{app}/{profile} | Configuration data for app in Spring profile (comma-separated).|
-| /{app}/{profile}/{label} | Add a git label |
-| /{app}/{profiels}{label}/{path} | An environment-specific plain text config file (at "path") |
+.Local FileSystem Configuration (Non-Git)
+----
+$ docker run \
+    -v /path/to/my/config:/config \
+    steeltoeoss/configserver \
+    --spring.profiles.active=native --spring.cloud.config.server.native.searchLocations=/config
+----
 
+== Resources
+
+|===
+|Path |Description
+
+|/_{app}_/_{profile}_
+|Configuration data for app in Spring profile
+
+|/_{app}_/_{profile}_/_{label}_
+|Add a git label
+
+|/_{app}_/_{profiles}/{label}_/_{path}_
+|Environment-specific plain text config file at _{path}_
+
+|===
+
+////
 ## Security
 
 The server is not secure by default. You can add HTTP Basic
@@ -55,3 +79,4 @@ KEYSTORE_PASSWORD works).  E.g.
 ```
 $ KEYSTORE_PASSWORD=foobar java -jar target/*.jar
 ```
+////

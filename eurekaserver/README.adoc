@@ -1,0 +1,32 @@
+= steeltoeoss/eurekaserver
+:toc: preamble
+:toclevels: 1
+:!toc-title:
+:linkattrs:
+
+SteeltoeOSS https://cloud.spring.io/spring-cloud-netflix/[Spring Cloud Eureka Server, window="_blank"] docker image.
+
+== Running
+
+By default, the server listens on port 8761.
+
+[NOTE]
+Following examples omit common `docker` options such as `-p8761:8761` for purposes of brevity.
+
+.Default
+----
+$ docker run steeltoeoss/eurekaserver
+----
+
+== Resources
+
+|===
+|Path |Description
+
+|/
+|Service registration listing
+
+|/eureka/apps
+|Registration metadata
+
+|===
