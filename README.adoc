@@ -2,7 +2,6 @@
 :toc: preamble
 :toclevels: 1
 :!toc-title:
-ifdef::env-github,env-browser[:outfilesuffix: .adoc]
 :linkattrs:
 
 GitHub repo for SteeltoeOSS Docker images.
@@ -25,10 +24,10 @@ $ mvnw package -pl configserver
 |===
 |Name |Description
 
-|link:configserver/README{outfilesuffix}[steeltoeoss/configserver]
+|link:configserver/[steeltoeoss/configserver]
 | Spring Cloud Config Server
 
-|link:eurekaserver/README{outfilesuffix}[steeltoeoss/eurekaserver]
+|link:eurekaserver/[steeltoeoss/eurekaserver]
 | Spring Cloud Eureka Server
 
 |===

@@ -4,11 +4,11 @@
 :!toc-title:
 :linkattrs:
 
-SteeltoeOSS https://cloud.spring.io/spring-cloud-config/[Spring Cloud Config Server, window="_blank"] docker image.
+SteeltoeOSS https://cloud.spring.io/spring-cloud-config/[Spring Cloud Config Server"] docker image.
 
 == Running
 
-By default, the server listens on port 8888 and gets it configuration from https://github.com/spring-cloud-samples/config-repo[window="_blank"].
+By default, the server listens on port 8888 and gets it configuration from https://github.com/spring-cloud-samples/config-repo.
 
 [NOTE]
 Following examples omit common `docker` options such as `-p8888:8888` for purposes of brevity.

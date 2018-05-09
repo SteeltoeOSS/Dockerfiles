@@ -4,7 +4,7 @@
 :!toc-title:
 :linkattrs:
 
-SteeltoeOSS https://cloud.spring.io/spring-cloud-netflix/[Spring Cloud Eureka Server, window="_blank"] docker image.
+SteeltoeOSS https://cloud.spring.io/spring-cloud-netflix/[Spring Cloud Eureka Server] docker image.
 
 == Running
 
