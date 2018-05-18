@@ -1,5 +1,6 @@
-# Maven output
-target/
+# Gradle output
+/.gradle/
+build/
 
 # Vi/Vim
 *.swp
