@@ -2,35 +2,14 @@ plugins {
     id 'org.springframework.boot' version '2.0.2.RELEASE'
 }
 
+project.version = configServerVersion
+
 dependencies {
     compile(
             group: 'org.springframework.cloud',
             name: 'spring-cloud-config-server',
-            version: "${version}.RELEASE"
+            version: "${configServerVersion}"
            )
-    testCompile 'org.springframework.boot:spring-boot-starter-test:1.4.1.RELEASE'
-    testCompile "junit:junit"
+    testCompile "org.springframework.boot:spring-boot-starter-test:${bootStarterTestVersion}"
+    testCompile "junit:junit:${junitVersion}"
 }
-
-//buildscript {
-//    repositories {
-//        jcenter()
-//    }
-//    dependencies {
-//        classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.4.7.RELEASE'
-//    }
-//}
-
-//apply plugin: 'org.springframework.boot'
-
-//dependencyManagement {
-//    imports {
-//        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Brixton.RELEASE"
-//    }
-//}
-
-//dependencies {
-//    compile "org.springframework.cloud:spring-cloud-config-server:${version}.RELEASE"
-//    testCompile 'org.springframework.boot:spring-boot-starter-test'
-//    testCompile "junit:junit"
-//}
