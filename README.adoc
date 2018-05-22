@@ -1,0 +1,49 @@
+= SteeltoeOSS Docker Images
+:toc: preamble
+:toclevels: 1
+:!toc-title:
+:linkattrs:
+
+GitHub repo for SteeltoeOSS Docker images.
+
+== Building
+
+.Build all images (defaults to Linux)
+----
+$ gradlew assemble
+----
+
+.Build all images for Windows
+----
+$ gradlew assemble -PdockerPlatformOS=windows
+----
+
+.Build a specific image
+----
+$ gradlew :configserver:assemble
+----
+
+== Pushing to Docker Hub
+
+.Push a specific image
+----
+$ docker push steeltoeoss/configserver::1.2.3-linux
+----
+
+.Push a manifest
+----
+$ manifest-tool --username * --password * push from-spec configserver/manifest.yml
+----
+
+== Images
+
+|===
+|Name |Description
+
+|link:configserver/[steeltoeoss/configserver]
+| Spring Cloud Config Server
+
+|link:eurekaserver/[steeltoeoss/eurekaserver]
+| Spring Cloud Eureka Server
+
+|===

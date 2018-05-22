@@ -1,0 +1,9 @@
+plugins {
+    id 'org.springframework.boot' version '2.0.2.RELEASE'
+}
+
+dependencies {
+    compile "org.springframework.cloud:spring-cloud-config-server:${version}.RELEASE"
+}
+
+copyJar.dependsOn bootJar
