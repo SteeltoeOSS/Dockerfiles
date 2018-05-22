@@ -35,6 +35,8 @@ subprojects {
         commandLine 'docker', 'build', '-t', tag, dockerBuildDir
     }
 
+    assemble.dependsOn assembleDockerImage
+
 }
 
 task wrapper(type: Wrapper) {
