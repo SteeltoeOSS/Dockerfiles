@@ -24,8 +24,8 @@ subprojects {
         rename "${project.name}-.+.jar", "${project.name}.jar"
     }
 
-    task assembleDockerImage(type: Exec) {
-        description 'Build Docker image'
+    task buildDockerImage(type: Exec) {
+        description 'Assembles a Docker image for this project.'
         group = 'Build'
         dependsOn copyDockerSource, copyJar
         def tag = "${project.name}:${project.version}-${dockerPlatformOS}"
@@ -35,7 +35,7 @@ subprojects {
         commandLine 'docker', 'build', '-t', tag, dockerBuildDir
     }
 
-    assemble.dependsOn assembleDockerImage
+    assemble.dependsOn buildDockerImage
 
 }
 
