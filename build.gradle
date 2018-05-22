@@ -1,3 +1,7 @@
+def process = 'docker version'.execute()
+process.waitFor()
+def dockerPlatformOS = (process.in.text =~ /(?ms)Server:.*OS\/Arch:\s+(\S+)\//)[0][1]
+
 subprojects {
 
     apply plugin: 'java'

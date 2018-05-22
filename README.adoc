@@ -8,14 +8,9 @@ GitHub repo for SteeltoeOSS Docker images.
 
 == Building
 
-.Build all images (defaults to Linux)
+.Build all images
 ----
 $ gradlew assemble
-----
-
-.Build all images for Windows
-----
-$ gradlew assemble -PdockerPlatformOS=windows
 ----
 
 .Build a specific image
