@@ -1,0 +1,13 @@
+image: steeltoeoss/configserver:1.2.3
+tags: ['1.2', 'latest']
+manifests:
+  -
+    image: steeltoeoss/configserver:1.2.3-linux
+    platform:
+      os: linux
+      architecture: amd64
+  -
+    image: steeltoeoss/configserver:1.2.3-windows
+    platform:
+      os: windows
+      architecture: amd64
