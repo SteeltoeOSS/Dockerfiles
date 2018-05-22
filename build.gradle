@@ -6,6 +6,35 @@ subprojects {
         mavenCentral()
     }
 
+    dependencies {
+        testCompile "org.springframework.boot:spring-boot-starter-test:${bootStarterTestVersion}"
+        testCompile "junit:junit:${junitVersion}"
+    }
+
+    def dockerBuildDir = file("${project.buildDir}/docker")
+
+    task copyDockerSource(type: Copy) {
+        from file("src/main/docker/${dockerPlatformOS}")
+        into dockerBuildDir
+    }
+
+    task copyJar(type: Copy) {
+        from jar.archivePath
+        into dockerBuildDir
+        rename "${project.name}-.+.jar", "${project.name}.jar"
+    }
+
+    task assembleDockerImage(type: Exec) {
+        description 'Build Docker image'
+        group = 'Build'
+        dependsOn copyDockerSource, copyJar
+        def tag = "${project.name}:${project.version}-${dockerPlatformOS}"
+        if (dockerNamespace) {
+            tag = "${dockerNamespace}/${tag}"
+        }
+        commandLine 'docker', 'build', '-t', tag, dockerBuildDir
+    }
+
 }
 
 task wrapper(type: Wrapper) {
