@@ -3,3 +3,7 @@
 
 # Vi/Vim
 *.swp
+
+# Gradle
+/.gradle/
+build/

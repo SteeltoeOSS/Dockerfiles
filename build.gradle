@@ -1,0 +1,44 @@
+subprojects {
+
+    apply plugin: 'java'
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        testCompile "org.springframework.boot:spring-boot-starter-test:${bootStarterTestVersion}"
+        testCompile "junit:junit:${junitVersion}"
+    }
+
+    def dockerBuildDir = file("${project.buildDir}/docker")
+
+    task copyDockerSource(type: Copy) {
+        from file("src/main/docker/${dockerPlatformOS}")
+        into dockerBuildDir
+    }
+
+    task copyJar(type: Copy) {
+        from jar.archivePath
+        into dockerBuildDir
+        rename "${project.name}-.+.jar", "${project.name}.jar"
+    }
+
+    task buildDockerImage(type: Exec) {
+        description 'Assembles a Docker image for this project.'
+        group = 'Build'
+        dependsOn copyDockerSource, copyJar
+        def tag = "${project.name}:${project.version}-${dockerPlatformOS}"
+        if (dockerNamespace) {
+            tag = "${dockerNamespace}/${tag}"
+        }
+        commandLine 'docker', 'build', '-t', tag, dockerBuildDir
+    }
+
+    assemble.dependsOn buildDockerImage
+
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.7'
+}
