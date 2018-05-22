@@ -1,0 +1,13 @@
+image: steeltoeoss/eurekaserver:1.4.4
+tags: ['1.4', 'latest']
+manifests:
+  -
+    image: steeltoeoss/eurekaserver:1.4.4-linux
+    platform:
+      os: linux
+      architecture: amd64
+  -
+    image: steeltoeoss/eurekaserver:1.4.4-windows
+    platform:
+      os: windows
+      architecture: amd64

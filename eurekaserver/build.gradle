@@ -1,0 +1,22 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.4.7.RELEASE'
+    }
+}
+
+apply plugin: 'org.springframework.boot'
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Brixton.RELEASE"
+    }
+}
+
+dependencies {
+    compile "org.springframework.cloud:spring-cloud-starter-eureka-server:${version}.RELEASE"
+}
+
+copyJar.dependsOn bootRepackage
