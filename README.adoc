@@ -8,18 +8,34 @@ GitHub repo for SteeltoeOSS Docker images.
 
 == Building
 
-Build all images:
+.Build all images (defaults to Linux)
 ----
-$ mvnw package
+$ gradlew assemble
 ----
 
-Build a specific image, e.g. steeltoeoss/configserver:
+.Build all images for Windows
 ----
-$ mvnw package -pl configserver
+$ gradlew assemble -PdockerPlatformOS=windows
+----
+
+.Build a specific image
+----
+$ gradlew :configserver:assemble
+----
+
+== Pushing to Docker Hub
+
+.Push a specific image
+----
+$ docker push steeltoeoss/configserver::1.2.3-linux
+----
+
+.Push a manifest
+----
+$ manifest-tool --username * --password * push from-spec configserver/manifest.yml
 ----
 
 == Images
-
 
 |===
 |Name |Description
