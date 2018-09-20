@@ -29,7 +29,7 @@ $ docker run steeltoeoss/configserver \
 $ docker run \
     -v /path/to/my/config:/config \
     steeltoeoss/configserver \
-    --spring.profiles.active=native --spring.cloud.config.server.native.searchLocations=/config
+    --spring.profiles.active=native
 ----
 
 == Resources
