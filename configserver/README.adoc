@@ -20,16 +20,12 @@ $ docker run steeltoeoss/configserver
 
 .Custom Git Repo Configuration
 ----
-$ docker run steeltoeoss/configserver \
-    --spring.cloud.config.server.git.uri=https://github.com/myorg/myrepo
+$ docker run steeltoeoss/configserver --spring.cloud.config.server.git.uri=https://github.com/myorg/myrepo
 ----
 
 .Local FileSystem Configuration (Non-Git)
 ----
-$ docker run \
-    -v /path/to/my/config:/config \
-    steeltoeoss/configserver \
-    --spring.profiles.active=native
+$ docker run -v /path/to/my/config:/config steeltoeoss/configserver --spring.profiles.active=native
 ----
 
 == Resources
