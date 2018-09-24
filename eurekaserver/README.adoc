@@ -30,3 +30,14 @@ $ docker run steeltoeoss/eurekaserver
 |Registration metadata
 
 |===
+
+== Project Generation
+
+Project initialized https://docs.spring.io/initializr/docs/current-SNAPSHOT/reference/htmlsingle/#command-line[Spring Initializr CLI]
+----
+$ curl https://start.spring.io/starter.zip \
+    -o eurekaserver.zip \
+    -d type=gradle-project -d baseDir=eurekaserver \
+    -d groupId=io.steeltoe.docker -d artifactId=eurekaserver -d applicationName=EurekaServer \
+    -d dependencies=cloud-eureka-server
+----

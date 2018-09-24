@@ -1,4 +1,4 @@
-package io.steeltoe.samples;
+package io.steeltoe.docker.eurekaserver;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -10,8 +10,7 @@ import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
 @EnableDiscoveryClient
 public class EurekaServer {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         SpringApplication.run(EurekaServer.class, args);
     }
-
 }
