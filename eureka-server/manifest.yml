@@ -1,0 +1,13 @@
+image: steeltoeoss/eureka-server:2.0.1
+tags: ['2.0', 'latest']
+manifests:
+  -
+    image: steeltoeoss/eureka-server:2.0.1-linux
+    platform:
+      os: linux
+      architecture: amd64
+  -
+    image: steeltoeoss/eureka-server:2.0.1-windows
+    platform:
+      os: windows
+      architecture: amd64

@@ -15,19 +15,19 @@ $ gradlew assemble
 
 .Build a specific image
 ----
-$ gradlew :configserver:assemble
+$ gradlew :config-server:assemble
 ----
 
 == Pushing to Docker Hub
 
 .Push a specific image
 ----
-$ docker push steeltoeoss/configserver::1.2.3-linux
+$ docker push steeltoeoss/config-server::1.2.3-linux
 ----
 
 .Push a manifest
 ----
-$ manifest-tool --username * --password * push from-spec configserver/manifest.yml
+$ manifest-tool --username * --password * push from-spec config-server/manifest.yml
 ----
 
 == Images
@@ -35,10 +35,10 @@ $ manifest-tool --username * --password * push from-spec configserver/manifest.y
 |===
 |Name |Description
 
-|link:configserver/[steeltoeoss/configserver]
+|link:config-server/[steeltoeoss/config-server]
 | Spring Cloud Config Server
 
-|link:eurekaserver/[steeltoeoss/eurekaserver]
+|link:eureka-server/[steeltoeoss/eureka-server]
 | Spring Cloud Eureka Server
 
 |===

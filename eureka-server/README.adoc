@@ -1,4 +1,4 @@
-= steeltoeoss/eurekaserver
+= steeltoeoss/eureka-server
 :toc: preamble
 :toclevels: 1
 :!toc-title:
@@ -10,7 +10,7 @@ SteeltoeOSS https://cloud.spring.io/spring-cloud-netflix/[Spring Cloud Eureka Se
 
 .Default
 ----
-$ docker run --publish 8761:8761 steeltoeoss/eurekaserver
+$ docker run --publish 8761:8761 steeltoeoss/eureka-server
 ----
 
 == Resources
@@ -31,8 +31,8 @@ $ docker run --publish 8761:8761 steeltoeoss/eurekaserver
 Project initialized https://docs.spring.io/initializr/docs/current-SNAPSHOT/reference/htmlsingle/#command-line[Spring Initializr CLI]
 ----
 $ curl https://start.spring.io/starter.zip \
-    -o eurekaserver.zip \
-    -d type=gradle-project -d baseDir=eurekaserver \
-    -d groupId=io.steeltoe.docker -d artifactId=eurekaserver -d applicationName=EurekaServer \
+    -o eureka-server.zip \
+    -d type=gradle-project \
+    -d groupId=io.steeltoe.docker -d artifactId=eureka-server -d applicationName=EurekaServer \
     -d dependencies=cloud-eureka-server
 ----
