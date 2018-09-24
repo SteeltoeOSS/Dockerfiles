@@ -15,14 +15,14 @@ $ gradlew assemble
 
 .Build a specific image
 ----
-$ gradlew :config-server:assemble
+$ gradlew :config-server:build
 ----
 
 == Pushing to Docker Hub
 
 .Push a specific image
 ----
-$ docker push steeltoeoss/config-server::1.2.3-linux
+$ docker push steeltoeoss/config-server:1.2.3-linux
 ----
 
 .Push a manifest
