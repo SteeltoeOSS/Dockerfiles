@@ -1,0 +1,25 @@
+= steeltoeoss/hystrix-dashboard
+:toc: preamble
+:toclevels: 1
+:!toc-title:
+:linkattrs:
+
+SteeltoeOSS https://github.com/Netflix-Skunkworks/hystrix-dashboard[Netflix Hystrix Dashboard] docker image.
+
+== Running
+
+.Default
+----
+$ docker run --public 7979:7979 steeltoeoss/hystrix-dashboard
+----
+
+== Project Generation
+
+Project initialized https://docs.spring.io/initializr/docs/current-SNAPSHOT/reference/htmlsingle/#command-line[Spring Initializr CLI]
+----
+$ curl https://start.spring.io/starter.zip \
+    -o hystrix-dashboard.zip \
+    -d type=gradle-project -d baseDir=hystrix-dashboard \
+    -d groupId=io.steeltoe.docker -d artifactId=hystrix-dashboard -d applicationName=HystrixDashboard \
+    -d dependencies=cloud-hystrix-dashboard
+----

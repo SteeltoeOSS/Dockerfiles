@@ -7,25 +7,21 @@
 SteeltoeOSS https://cloud.spring.io/spring-cloud-config/[Spring Cloud Config Server"] docker image.
 
 == Running
-
-By default, the server listens on port 8888 and gets it configuration from https://github.com/spring-cloud-samples/config-repo.
-
-[NOTE]
 Following examples omit common `docker` options such as `-p8888:8888` for purposes of brevity.
 
 .Default Configuration
 ----
-$ docker run steeltoeoss/configserver
+$ docker run --publish 8888:8888 steeltoeoss/configserver
 ----
 
 .Custom Git Repo Configuration
 ----
-$ docker run steeltoeoss/configserver --spring.cloud.config.server.git.uri=https://github.com/myorg/myrepo
+$ docker run --publish 8888:8888 steeltoeoss/configserver --spring.cloud.config.server.git.uri=https://github.com/myorg/myrepo
 ----
 
 .Local FileSystem Configuration (Non-Git)
 ----
-$ docker run -v /path/to/my/config:/config steeltoeoss/configserver --spring.profiles.active=native
+$ docker run --publish 8888:8888 -v /path/to/my/config:/config steeltoeoss/configserver --spring.profiles.active=native
 ----
 
 == Resources

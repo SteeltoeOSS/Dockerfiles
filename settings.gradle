@@ -1,2 +1,3 @@
 include 'configserver'
 include 'eurekaserver'
+include 'hystrix-dashboard'

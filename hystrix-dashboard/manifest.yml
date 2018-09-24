@@ -1,0 +1,13 @@
+image: steeltoeoss/hystrix-dashboard:1.4.5
+tags: ['1.4', 'latest']
+manifests:
+  -
+    image: steeltoeoss/hystrix-dashboard:1.4.5-linux
+    platform:
+      os: linux
+      architecture: amd64
+  -
+    image: steeltoeoss/hystrix-dashboard:1.4.5-windows
+    platform:
+      os: windows
+      architecture: amd64
