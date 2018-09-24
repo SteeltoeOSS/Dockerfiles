@@ -19,7 +19,7 @@ Project initialized https://docs.spring.io/initializr/docs/current-SNAPSHOT/refe
 ----
 $ curl https://start.spring.io/starter.zip \
     -o hystrix-dashboard.zip \
-    -d type=gradle-project -d baseDir=hystrix-dashboard \
+    -d type=gradle-project \
     -d groupId=io.steeltoe.docker -d artifactId=hystrix-dashboard -d applicationName=HystrixDashboard \
     -d dependencies=cloud-hystrix-dashboard
 ----
