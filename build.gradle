@@ -2,7 +2,7 @@ import java.nio.file.Files
 
 import static java.nio.file.Files.*
 
-print("Docker OS...")
+print("Docker OS ... ")
 def dockerOS = getDockerOS()
 println(dockerOS)
 
