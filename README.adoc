@@ -10,12 +10,12 @@ GitHub repo for SteeltoeOSS Docker images.
 
 .Build all images
 ----
-$ gradlew assemble
+$ gradlew build
 ----
 
 .Build a specific image
 ----
-$ gradlew :config-server:build
+$ gradlew :images:config-server:build
 ----
 
 == Pushing to Docker Hub

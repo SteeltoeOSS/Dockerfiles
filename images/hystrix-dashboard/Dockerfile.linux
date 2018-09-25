@@ -1,0 +1,6 @@
+FROM openjdk:8u171-jre-alpine
+ADD hystrix-dashboard-1.4.5.jar .
+EXPOSE 7979
+ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "hystrix-dashboard-1.4.5.jar"]
+
+# vim: ft=dockerfile

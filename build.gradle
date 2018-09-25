@@ -1,31 +1,53 @@
+import java.nio.file.Files
+
+import static java.nio.file.Files.*
+
 print("Docker OS...")
 def dockerOS = getDockerOS()
 println(dockerOS)
 
-subprojects {
-
+configure(subprojects.findAll { it.parent.name.equals('images') }) {
     apply plugin: 'base'
 
-    ext.dockerSourceDir = file("src/main/docker")
-    ext.dockerBuildDir = file("${project.buildDir}/docker")
+    task copyDockerfile(type: Copy) {
+        from file("Dockerfile.${dockerOS}")
+        into file("${project.buildDir}")
+        rename { fname -> fname - ".${dockerOS}" }
+    }
 
-    task copyDockerSource(type: Copy) {
-        from file("${dockerSourceDir}/${dockerOS}")
-        into dockerBuildDir
+    task copyBootJar {
+        dependsOn ":services:${project.name}:build"
+        doLast {
+            def srcProj  = project(":services:${project.name}")
+            def dstProj  = project(":images:${project.name}")
+            def srcBootJar = new File("${srcProj.buildDir}/libs/${srcProj.jar.archiveName}")
+            def dstBootJar = new File("${dstProj.buildDir}/${srcProj.jar.archiveName}")
+            if (dstBootJar.exists()) {
+                dstBootJar.delete()
+            }
+            dstBootJar.parentFile.mkdirs()
+            Files.copy(srcBootJar.toPath(), dstBootJar.toPath())
+        }
     }
 
     task buildDockerImage(type: Exec) {
         description 'Assembles a Docker image for this project.'
         group = 'Build'
-        dependsOn copyDockerSource //, copyJar
-        def tag = "${project.name}:${project.version}${project.rev}-${dockerOS}"
+        dependsOn copyDockerfile
+        def serviceProject = findProject(":services:${project.name}")
+        if (serviceProject != null) {
+            dependsOn copyBootJar
+        }
+        def version = project.properties["version.${dockerOS}"]
+        def rev = project.properties["rev.${dockerOS}"]
+        def tag = "${project.name}:${version}${rev}-${dockerOS}"
         if (dockerNamespace) {
             tag = "${dockerNamespace}/${tag}"
         }
-        commandLine 'docker', 'build', '-t', tag, dockerBuildDir
+        commandLine 'docker', 'build', '-t', tag, project.buildDir
     }
 
-    assemble.dependsOn buildDockerImage
+    build.dependsOn buildDockerImage
 }
 
 String getDockerOS() {
