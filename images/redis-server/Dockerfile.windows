@@ -1,10 +1,9 @@
-FROM microsoft/windowsservercore
+FROM microsoft/nanoserver
+ADD Redis-x64-3.0.504.zip redis.zip
 RUN powershell -Command \
     $ErrorActionPreference = 'Stop'; \
-    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12; \
-    Invoke-WebRequest -Method Get -Uri https://github.com/MicrosoftArchive/redis/releases/download/win-3.0.504/Redis-x64-3.0.504.zip -OutFile c:\redis.zip ; \
-    Expand-Archive -Path c:\redis.zip -DestinationPath c:\redis ; \
-    Remove-Item c:\redis.zip -Force
+    Expand-Archive -Path redis.zip -DestinationPath c:\redis ; \
+    Remove-Item redis.zip -Force
 WORKDIR /redis
 ENTRYPOINT ["redis-server.exe"]
 

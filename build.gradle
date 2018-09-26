@@ -9,6 +9,8 @@ println(dockerOS)
 configure(subprojects.findAll { it.parent.name.equals('images') }) {
     apply plugin: 'base'
 
+    ext.dockerOS = dockerOS
+
     task copyDockerfile(type: Copy) {
         from file("Dockerfile.${dockerOS}")
         into file("${project.buildDir}")
