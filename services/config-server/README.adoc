@@ -1,0 +1,8 @@
+Project initialized using:
+----
+$ curl https://start.spring.io/starter.zip \
+    -o config-server.zip \
+    -d type=gradle-project \
+    -d groupId=io.steeltoe.docker -d artifactId=config-server -d applicationName=ConfigServer \
+    -d dependencies=cloud-config-server
+----

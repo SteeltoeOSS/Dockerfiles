@@ -35,10 +35,16 @@ $ manifest-tool --username * --password * push from-spec config-server/manifest.
 |===
 |Name |Description
 
-|link:config-server/[steeltoeoss/config-server]
+|link:images/config-server/[steeltoeoss/config-server]
 | Spring Cloud Config Server
 
-|link:eureka-server/[steeltoeoss/eureka-server]
-| Spring Cloud Eureka Server
+|link:images/eureka-server/[steeltoeoss/eureka-server]
+| Netflix Eureka Server
+
+|link:images/hystrix-dashboard/[steeltoeoss/hystrix-dashboard]
+| Netflix Hystrix Dashdboard
+
+|link:images/redis-server/[steeltoeoss/redis-server]
+| Redis
 
 |===
