@@ -8,7 +8,6 @@ SteeltoeOSS https://github.com/Netflix-Skunkworks/hystrix-dashboard[Netflix Hyst
 
 == Running
 
-.Default
 ----
 $ docker run --public 7979:7979 steeltoeoss/hystrix-dashboard
 ----
