@@ -1,3 +1,3 @@
-FROM mcr.microsoft.com/mssql/server:2017-CU11
+FROM microsoft/mssql-server-windows-developer:2017-CU1
 
 # vim: ft=dockerfile
