@@ -1,0 +1,6 @@
+FROM openjdk:8u171-jre-alpine
+ADD zipkin-server-exec-2.11.6.jar .
+EXPOSE 9411
+ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "zipkin-server-exec-2.11.6.jar"]
+
+# vim: ft=dockerfile

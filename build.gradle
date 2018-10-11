@@ -41,7 +41,16 @@ configure(subprojects.findAll { it.parent.name.equals('images') }) {
             dependsOn copyBootJar
         }
         def version = project.properties["version.${dockerOS}"]
+        if (version == null) {
+            version = project.properties["version"]
+        }
         def rev = project.properties["rev.${dockerOS}"]
+        if (rev == null) {
+            rev = project.properties["rev"]
+        }
+        if (rev == null) {
+            rev = ""
+        }
         def tag = "${project.name}:${version}${rev}-${dockerOS}"
         if (dockerNamespace) {
             tag = "${dockerNamespace}/${tag}"
