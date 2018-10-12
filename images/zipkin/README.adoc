@@ -1,0 +1,14 @@
+= steeltoeoss/zipkin
+:toc: preamble
+:toclevels: 1
+:!toc-title:
+:linkattrs:
+
+SteeltoeOSS https://zipkin.io/[Zipkin Trace Collector and UI] docker image.
+
+== Running
+
+.Default Configuration
+----
+$ docker run --publish 9411:9411 steeltoeoss/zipkin
+----

@@ -1,4 +1,4 @@
-= steeltoeoss/redis-server
+= steeltoeoss/redis
 :toc: preamble
 :toclevels: 1
 :!toc-title:
@@ -10,5 +10,5 @@ SteeltoeOSS https://redis.io/[Redis Server] docker image.
 
 .Default Configuration
 ----
-$ docker run --publish 6379:6379 steeltoeoss/redis-server
+$ docker run --publish 6379:6379 steeltoeoss/redis
 ----
