@@ -5,6 +5,7 @@ plugins {
 task downloadRedisForWindows(type: Download) {
     src 'https://github.com/MicrosoftArchive/redis/releases/download/win-3.0.504/Redis-x64-3.0.504.zip'
     dest buildDir
+    onlyIfModified true
 }
 
 if (dockerOS == "windows") {
