@@ -9,5 +9,5 @@ SteeltoeOSS https://www.microsoft.com/sql-server/[Microsoft SQL Server] docker i
 == Running
 
 ----
-$ docker run --env "-e ACCEPT_EULA=Y" --env 'SA_PASSWORD=password' --publish 1433:1433 steeltoeoss/mssql
+$ docker run --env ACCEPT_EULA=Y --env SA_PASSWORD=password --publish 1433:1433 steeltoeoss/mssql
 ----
