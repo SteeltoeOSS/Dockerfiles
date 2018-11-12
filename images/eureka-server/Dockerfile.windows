@@ -1,5 +1,5 @@
 FROM openjdk:8u171-jdk-nanoserver
-ADD eureka-server-2.0.1.jar .
+COPY eureka-server-2.0.1.jar .
 EXPOSE 8761
 ENTRYPOINT ["java", "-jar", "eureka-server-2.0.1.jar"]
 

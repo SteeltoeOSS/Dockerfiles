@@ -1,5 +1,5 @@
 FROM microsoft/nanoserver:sac2016
-ADD Redis-x64-3.0.504.zip redis.zip
+COPY Redis-x64-3.0.504.zip redis.zip
 RUN powershell -Command \
     $ErrorActionPreference = 'Stop'; \
     Expand-Archive -Path redis.zip -DestinationPath c:\redis ; \

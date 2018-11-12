@@ -1,5 +1,5 @@
 FROM microsoft/nanoserver:sac2016
-ADD mysql-5.7.24-winx64.zip mysql.zip
+COPY mysql-5.7.24-winx64.zip mysql.zip
 RUN powershell -Command \
     Expand-Archive -Path mysql.zip -DestinationPath scratch ; \
     Remove-Item mysql.zip -Force ; \
