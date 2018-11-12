@@ -1,6 +1,6 @@
 FROM openjdk:8u171-jdk-nanoserver
 COPY eureka-server-2.0.1.jar .
 EXPOSE 8761
-ENTRYPOINT ["java", "-jar", "eureka-server-2.0.1.jar"]
+ENTRYPOINT ["java.exe", "-jar", "eureka-server-2.0.1.jar"]
 
 # vim: ft=dockerfile

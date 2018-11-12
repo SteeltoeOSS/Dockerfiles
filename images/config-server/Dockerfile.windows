@@ -1,6 +1,6 @@
 FROM openjdk:8u171-jdk-nanoserver
 COPY config-server-2.0.1.jar .
 EXPOSE 8888
-ENTRYPOINT ["java", "-jar", "config-server-2.0.1.jar"]
+ENTRYPOINT ["java.exe", "-jar", "config-server-2.0.1.jar"]
 
 # vim: ft=dockerfile
