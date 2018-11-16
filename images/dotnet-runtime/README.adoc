@@ -1,0 +1,13 @@
+= steeltoeoss/dotnet-runtime
+:toc: preamble
+:toclevels: 1
+:!toc-title:
+:linkattrs:
+
+SteeltoeOSS https://hub.docker.com/r/microsoft/dotnet/[Microsoft Dotnet Runtime] docker image.
+
+== Running
+
+----
+$ docker run --volume <path-to-dll>:/app/<path-to-dll> --publish 8080:80 steeltoeoss/dotnet-runtime dotnet /app/<path-to-dll>
+----
