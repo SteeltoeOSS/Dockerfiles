@@ -1,6 +1,0 @@
-FROM openjdk:8u171-jre-alpine
-COPY eureka-server-2.0.1.jar .
-EXPOSE 8761
-ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "eureka-server-2.0.1.jar"]
-
-# vim: ft=dockerfile
