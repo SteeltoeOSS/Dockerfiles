@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# Netflix Eureka Server build
+# Netflix Eureka Server Build
 # -----------------------------------------------------------------------------
 
 FROM openjdk:8u171-jdk-alpine as build
@@ -11,7 +11,7 @@ RUN ./gradlew build
 RUN ln -s build/libs/eureka-server-${IMAGE_VERSION}.jar eureka-server.jar
 
 # -----------------------------------------------------------------------------
-# Netflix Eureka Server image
+# Netflix Eureka Server Linux Image
 # -----------------------------------------------------------------------------
 
 FROM openjdk:8u171-jre-alpine

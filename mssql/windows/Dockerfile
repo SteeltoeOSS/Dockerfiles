@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
-# MySQL Linux Image
+# Microsoft SQL Server Windows Image
 # -----------------------------------------------------------------------------
 
-FROM mysql:5.7.24
-ENV IMAGE_VERSION 5.7.24
-EXPOSE 3306
+FROM microsoft/mssql-server-windows-developer:2017-CU1
+ENV IMAGE_VERSION 2017-CU1
+EXPOSE 1433

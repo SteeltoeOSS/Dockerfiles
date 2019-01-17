@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# Netflix Hystrix Dashboard build
+# Netflix Hystrix Dashboard Build
 # -----------------------------------------------------------------------------
 
 FROM openjdk:8u171-jdk-alpine as build
@@ -11,7 +11,7 @@ RUN ./gradlew build
 RUN ln -s build/libs/hystrix-dashboard-${IMAGE_VERSION}.jar hystrix-dashboard.jar
 
 # -----------------------------------------------------------------------------
-# Netflix Hystrix Dashboard image
+# Netflix Hystrix Dashboard Linux Image
 # -----------------------------------------------------------------------------
 
 FROM openjdk:8u171-jre-alpine

@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# Zipkin Server download
+# Zipkin Server Download
 # -----------------------------------------------------------------------------
 
 FROM alpine as download
@@ -11,7 +11,7 @@ RUN wget \
 RUN ln -s zipkin-server-exec-${IMAGE_VERSION}.jar zipkin-server.jar
 
 # -----------------------------------------------------------------------------
-# Zipkin Server image
+# Zipkin Server Linux Image
 # -----------------------------------------------------------------------------
 
 FROM openjdk:8u171-jre-alpine

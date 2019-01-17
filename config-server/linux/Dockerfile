@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# Spring Config Server build
+# Spring Config Server Build
 # -----------------------------------------------------------------------------
 
 FROM openjdk:8u171-jdk-alpine as build
@@ -11,7 +11,7 @@ RUN ./gradlew build
 RUN ln -s build/libs/config-server-${IMAGE_VERSION}.jar config-server.jar
 
 # -----------------------------------------------------------------------------
-# Spring Config Server image
+# Spring Config Server Linux Image
 # -----------------------------------------------------------------------------
 
 FROM openjdk:8u171-jre-alpine

@@ -1,7 +1,6 @@
 # -----------------------------------------------------------------------------
-# MySQL Linux Image
+# DotNet Runtime Windows Image
 # -----------------------------------------------------------------------------
 
-FROM mysql:5.7.24
-ENV IMAGE_VERSION 5.7.24
-EXPOSE 3306
+FROM microsoft/dotnet:2.1-runtime
+ENV IMAGE_VERSION 2.1

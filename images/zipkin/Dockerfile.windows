@@ -1,6 +1,0 @@
-FROM openjdk:8u171-jdk-nanoserver
-COPY zipkin-server-exec-2.11.6.jar .
-EXPOSE 9411
-ENTRYPOINT ["java.exe", "-jar", "zipkin-server-exec-2.11.6.jar"]
-
-# vim: ft=dockerfile
