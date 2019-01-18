@@ -74,6 +74,7 @@ $ImageDirectory = Join-Path $ImagesDirectory $Name
 if (!(Test-Path $ImageDirectory)) {
     throw "Unknown image $Name; run with -List to list available images"
 }
+$Name =Split-Path -Leaf $ImageDirectory   # this removes stuff like ".\" prefix
 
 if (!(Get-Command "docker" -ErrorAction SilentlyContinue)) {
     throw "'docker' command not found"
