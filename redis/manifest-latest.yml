@@ -1,0 +1,12 @@
+image: steeltoeoss/redis:latest
+manifests:
+  -
+    image: steeltoeoss/redis-amd64-linux:4.0.11
+    platform:
+      os: linux
+      architecture: amd64
+  -
+    image: steeltoeoss/redis-amd64-windows:3.0.504
+    platform:
+      os: windows
+      architecture: amd64

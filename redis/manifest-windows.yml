@@ -1,0 +1,8 @@
+image: steeltoeoss/redis:3.0.504
+tags: ['3', '3.0']
+manifests:
+  -
+    image: steeltoeoss/redis-amd64-windows:3.0.504
+    platform:
+      os: windows
+      architecture: amd64

@@ -1,13 +1,13 @@
 image: steeltoeoss/config-server:2.0.1
-tags: ['2.0', 'latest']
+tags: ['latest', '2', '2.0']
 manifests:
   -
-    image: steeltoeoss/config-server:2.0.1-linux
+    image: steeltoeoss/config-server-amd64-linux:2.0.1
     platform:
       os: linux
       architecture: amd64
   -
-    image: steeltoeoss/config-server:2.0.1-windows
+    image: steeltoeoss/config-server-amd64-windows:2.0.1
     platform:
       os: windows
       architecture: amd64
