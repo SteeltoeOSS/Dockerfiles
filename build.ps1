@@ -46,6 +46,9 @@ param(
    [String] $Tag
 )
 
+$DockerOrg = "steeltoeoss"
+$DockerArch = "amd64"
+
 # -----------------------------------------------------------------------------
 # impl
 # -----------------------------------------------------------------------------
@@ -106,7 +109,7 @@ if (Test-Path $DockerBuildFiles) {
 }
 
 if (!$Tag) {
-    $Tag = "steeltoeoss/$Name"
+    $Tag = "$DockerOrg/$Name-$DockerArch-$DockerOS"
     $VersionMatcher = Select-String -Path $Dockerfile -Pattern '^ENV\s+IMAGE_VERSION\s*=?\s*(.+)$'
     if ($VersionMatcher) {
         $Version = $VersionMatcher.Matches.Groups[1]
@@ -117,7 +120,6 @@ if (!$Tag) {
             $Tag += "-$Revision"
         }
     }
-    $Tag += "-$DockerOS"
 }
 
 docker build -t $Tag $DockerContextDir
