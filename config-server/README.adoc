@@ -15,12 +15,15 @@ $ docker run --publish 8888:8888 steeltoeoss/config-server
 
 .Custom Git Repo Configuration
 ----
-$ docker run --publish 8888:8888 steeltoeoss/config-server --spring.cloud.config.server.git.uri=https://github.com/myorg/myrepo
+$ docker run --publish 8888:8888 steeltoeoss/config-server \
+    --spring.cloud.config.server.git.uri=https://github.com/myorg/myrepo
 ----
 
 .Local File System Configuration
 ----
-$ docker run --publish 8888:8888 -v /path/to/my/config:/config steeltoeoss/config-server --spring.profiles.active=native
+$ docker run --publish 8888:8888 --volume /path/to/my/config:/config steeltoeoss/config-server \
+    --spring.profiles.active=native \
+    --spring.cloud.config.server.native.searchLocations=file:///config
 ----
 
 == Resources
