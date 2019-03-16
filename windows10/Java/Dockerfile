@@ -1,7 +1,7 @@
 FROM microsoft/nanoserver
 LABEL Description="Java JDK - Windows Nano Server"
 
-ENV OPENJDK_DOWNLOAD_URL "http://cdn.azul.com/zulu/bin/zulu8.15.0.1-jdk8.0.92-win_x64.zip"
+ENV OPENJDK_DOWNLOAD_URL "https://cdn.azul.com/zulu/bin/zulu8.15.0.1-jdk8.0.92-win_x64.zip"
 
 RUN powershell.exe -Command ; \
 	$handler = New-Object System.Net.Http.HttpClientHandler ; \
