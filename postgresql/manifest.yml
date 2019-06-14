@@ -1,0 +1,13 @@
+image: steeltoeoss/postgresql:10.8
+tags: ['latest', '10']
+manifests:
+  -
+    image: steeltoeoss/postgresql-amd64-linux:10.8
+    platform:
+      os: linux
+      architecture: amd64
+  -
+    image: steeltoeoss/postgresql-amd64-windows:10.8
+    platform:
+      os: windows
+      architecture: amd64
