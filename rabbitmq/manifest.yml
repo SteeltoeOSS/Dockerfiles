@@ -1,0 +1,11 @@
+image: steeltoeoss/rabbitmq:3.7.15
+tags: ['latest', '3', '3.7']
+manifests:
+- image: steeltoeoss/rabbitmq-amd64-linux:3.7.15
+  platform:
+    os: linux
+    architecture: amd64
+- image: steeltoeoss/rabbitmq-amd64-windows:3.7.15
+  platform:
+    os: windows
+    architecture: amd64

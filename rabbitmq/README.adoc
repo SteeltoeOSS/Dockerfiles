@@ -1,0 +1,14 @@
+= steeltoeoss/rabbitmq
+:toc: preamble
+:toclevels: 1
+:!toc-title:
+:linkattrs:
+
+SteeltoeOSS https://www.rabbitmq.com/[RabbitMQ Server] docker image.
+
+== Running
+
+.Default Configuration
+----
+$ docker run --publish 5672:5672 steeltoeoss/rabbitmq
+----
