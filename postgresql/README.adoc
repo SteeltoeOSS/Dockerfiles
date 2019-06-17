@@ -1,0 +1,14 @@
+= steeltoeoss/postgresql
+:toc: preamble
+:toclevels: 1
+:!toc-title:
+:linkattrs:
+
+SteeltoeOSS https://www.postgresql.com/[PostgreSQL Server] docker image.
+
+== Running
+
+.Default Configuration
+----
+$ docker run --publish 5432:5432 steeltoeoss/postgresql
+----
