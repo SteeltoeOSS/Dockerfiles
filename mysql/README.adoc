@@ -9,5 +9,5 @@ SteeltoeOSS https://www.mysql.com/[MySQL Server] docker image.
 == Running
 
 ----
-$ docker run --env MYSQL_ROOT_PASSWORD=my-secret-pw steeltoe --publish 3306:3306 steeltoeoss/mysql
+$ docker run --env MYSQL_ROOT_PASSWORD=my-secret-pw --publish 3306:3306 steeltoeoss/mysql
 ----
