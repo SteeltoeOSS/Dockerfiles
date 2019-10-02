@@ -3,7 +3,7 @@
 # -----------------------------------------------------------------------------
 
 FROM openjdk:8u171-jdk-alpine as build
-ENV IMAGE_VERSION 2.0.1
+ENV IMAGE_VERSION 2.1.3
 ENV GRADLE_OPTS -Dorg.gradle.daemon=false
 WORKDIR /scratch
 COPY files .
