@@ -103,7 +103,7 @@ $DockerBuildFiles = Join-Path $ImageDirectory "files"
 if (Test-Path $DockerBuildFiles) {
     $Target = Join-Path $DockerContextDir "files"
     if (Test-Path $Target) {
-        Remove-Item -Recurse $Target
+        Remove-Item -Force -Recurse $Target
     }
     Copy-Item -Recurse $DockerBuildFiles $Target
 }
