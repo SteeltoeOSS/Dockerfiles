@@ -2,8 +2,9 @@
 # Netflix Eureka Server Build
 # -----------------------------------------------------------------------------
 
-FROM openjdk:8u171-jdk-alpine as build
+FROM bellsoft/liberica-openjdk-alpine:8u252 as build
 ENV IMAGE_VERSION 2.1.3
+ENV IMAGE_REVISION r1
 ENV GRADLE_OPTS -Dorg.gradle.daemon=false
 WORKDIR /scratch
 COPY files .
@@ -14,7 +15,7 @@ RUN ln -s build/libs/eureka-server-${IMAGE_VERSION}.jar eureka-server.jar
 # Netflix Eureka Server Linux Image
 # -----------------------------------------------------------------------------
 
-FROM openjdk:8u171-jre-alpine
+FROM bellsoft/liberica-openjre-alpine:8u252
 WORKDIR /eureka-server
 COPY --from=build /scratch .
 EXPOSE 8761

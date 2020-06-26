@@ -2,8 +2,9 @@
 # Netflix Hystrix Dashboard Build
 # -----------------------------------------------------------------------------
 
-FROM openjdk:8u171-jdk-alpine as build
+FROM bellsoft/liberica-openjdk-alpine:8u252 as build
 ENV IMAGE_VERSION 1.4.5
+ENV IMAGE_REVISION r1
 ENV GRADLE_OPTS -Dorg.gradle.daemon=false
 WORKDIR /scratch
 COPY files .
@@ -14,7 +15,7 @@ RUN ln -s build/libs/hystrix-dashboard-${IMAGE_VERSION}.jar hystrix-dashboard.ja
 # Netflix Hystrix Dashboard Linux Image
 # -----------------------------------------------------------------------------
 
-FROM openjdk:8u171-jre-alpine
+FROM bellsoft/liberica-openjre-alpine:8u252
 WORKDIR /hystrix-dashboard
 COPY --from=build /scratch .
 EXPOSE 7979
