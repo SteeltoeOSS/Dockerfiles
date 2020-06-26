@@ -48,6 +48,7 @@ param(
 
 $DockerOrg = "steeltoeoss"
 $DockerArch = "amd64"
+$DockerOs = "linux"
 
 # -----------------------------------------------------------------------------
 # impl
@@ -83,29 +84,10 @@ if (!(Get-Command "docker" -ErrorAction SilentlyContinue)) {
     throw "'docker' command not found"
 }
 
-$DockerOSMatcher = docker info 2>&1 | Select-String  -Pattern "OSType: (.*)"
-if ($LastExitCode) {
-    throw "Error running 'docker'; is Docker daemon running?"
-}
-if (!$DockerOSMatcher) {
-    throw "Couldn't determine Docker OS"
-}
-
-$DockerOS = $DockerOSMatcher.Matches.Groups[1]
-$DockerContextDir = Join-Path $ImageDirectory $DockerOS
-$Dockerfile = Join-Path $DockerContextDir Dockerfile
+$Dockerfile = Join-Path $ImageDirectory Dockerfile
 
 if (!(Test-Path $Dockerfile)) {
-    throw "No Dockerfile for $Image on $DockerOS (expected $Dockerfile)"
-}
-
-$DockerBuildFiles = Join-Path $ImageDirectory "files"
-if (Test-Path $DockerBuildFiles) {
-    $Target = Join-Path $DockerContextDir "files"
-    if (Test-Path $Target) {
-        Remove-Item -Force -Recurse $Target
-    }
-    Copy-Item -Recurse $DockerBuildFiles $Target
+    throw "No Dockerfile for $Image (expected $Dockerfile)"
 }
 
 if (!$Tag) {
@@ -122,6 +104,6 @@ if (!$Tag) {
     }
 }
 
-docker build -t $Tag $DockerContextDir
+docker build -t $Tag $ImageDirectory
 
 # vim: et sw=4 sts=4
