@@ -1,13 +1,7 @@
 image: steeltoeoss/mysql:5.7.24
 tags: ['latest', '5', '5.7']
 manifests:
-  -
-    image: steeltoeoss/mysql-amd64-linux:5.7.24
+  - image: steeltoeoss/mysql-amd64-linux:5.7.24
     platform:
       os: linux
-      architecture: amd64
-  -
-    image: steeltoeoss/mysql-amd64-windows:5.7.24
-    platform:
-      os: windows
       architecture: amd64

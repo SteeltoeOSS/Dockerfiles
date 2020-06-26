@@ -1,8 +1,0 @@
-image: steeltoeoss/redis:4.0.11
-tags: ['4', '4.0']
-manifests:
-  -
-    image: steeltoeoss/redis-amd64-linux:4.0.11
-    platform:
-      os: linux
-      architecture: amd64

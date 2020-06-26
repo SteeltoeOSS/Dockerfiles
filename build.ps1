@@ -15,12 +15,10 @@
     .DESCRIPTION
     Builds a specified Steeltoe Docker image.
 
-    The image will be compatible with the Docker host container type.  For example, if the Docker host is using Windows containers, the built image will be run on hosts using Windows containers.
-
     By default, the image will be tagged using the name '<image>:[<version>[-<rev>]]' where:
       image      the specified Image name
-      version    the value of 'ImageVersion' if specified in Dockerfile
-      rev        the value of 'ImageRevision' if specified in Dockerfile
+      version    the value of 'IMAGE_VERSION' if specified in Dockerfile
+      rev        the value of 'IMAGE_REVISION' if specified in Dockerfile
 
     .PARAMETER Help
     Print this message.

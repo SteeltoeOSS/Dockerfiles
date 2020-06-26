@@ -1,13 +1,7 @@
 image: steeltoeoss/mssql:2017
 tags: ['latest']
 manifests:
-  -
-    image: steeltoeoss/mssql-amd64-linux:2017-CU11
+  - image: steeltoeoss/mssql-amd64-linux:2017-CU11
     platform:
       os: linux
-      architecture: amd64
-  -
-    image: steeltoeoss/mssql-amd64-windows:2017-CU1
-    platform:
-      os: windows
       architecture: amd64

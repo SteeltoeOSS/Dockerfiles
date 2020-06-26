@@ -5,7 +5,3 @@ manifests:
   platform:
     os: linux
     architecture: amd64
-- image: steeltoeoss/rabbitmq-amd64-windows:3.7.15
-  platform:
-    os: windows
-    architecture: amd64
