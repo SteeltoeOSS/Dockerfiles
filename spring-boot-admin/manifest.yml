@@ -1,0 +1,7 @@
+image: steeltoeoss/spring-boot-admin:2.2.3
+tags: ['latest', '2.2.3']
+manifests:
+  - image: steeltoeoss/mysql-amd64-linux:5.7.24
+    platform:
+      os: linux
+      architecture: amd64
