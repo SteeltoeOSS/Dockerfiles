@@ -9,5 +9,5 @@ SteeltoeOSS https://github.com/codecentric/spring-boot-admin docker image.
 == Running
 
 ----
-$ docker run --publish 8080:8080 steeltoeoss/spring-boot-admin:latest
+$ docker run --publish 8080:8080 steeltoeoss/spring-boot-admin
 ----
