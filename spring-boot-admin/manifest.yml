@@ -1,0 +1,7 @@
+image: steeltoeoss/spring-boot-admin:2.2.3
+tags: ['latest', '2.2.3']
+manifests:
+  - image: steeltoeoss/spring-boot-admin-amd64-linux:2.2.3
+    platform:
+      os: linux
+      architecture: amd64
