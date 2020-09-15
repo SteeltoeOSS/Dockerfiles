@@ -1,6 +1,0 @@
---- configserver.pure/src/main/resources/application.properties	2020-09-14 16:02:18.000000000 -0400
-+++ configserver/src/main/resources/application.properties	2020-09-14 16:09:17.000000000 -0400
-@@ -1 +1,2 @@
--
-+server.port=8888
-+spring.cloud.config.server.git.uri=https://github.com/spring-cloud-samples/config-repo

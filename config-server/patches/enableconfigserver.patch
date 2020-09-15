@@ -1,13 +1,24 @@
---- configserver.pure/src/main/java/io/steeltoe/docker/configserver/ConfigServer.java	2020-09-14 16:02:18.000000000 -0400
-+++ configserver/src/main/java/io/steeltoe/docker/configserver/ConfigServer.java	2020-09-14 16:02:40.000000000 -0400
-@@ -2,8 +2,10 @@
- 
+--- a/src/main/java/io/steeltoe/docker/configserver/ConfigServer.java	2020-09-14 16:02:18.000000000 -0400
++++ b/src/main/java/io/steeltoe/docker/configserver/ConfigServer.java	2020-09-15 06:45:08.000000000 -0400
+@@ -1,12 +1,21 @@
+ package io.steeltoe.docker.configserver;
+
++import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
  import org.springframework.boot.SpringApplication;
  import org.springframework.boot.autoconfigure.SpringBootApplication;
 +import org.springframework.cloud.config.server.EnableConfigServer;
- 
+
  @SpringBootApplication
 +@EnableConfigServer
  public class ConfigServer {
- 
+
++ 	private static final Logger logger = LoggerFactory.getLogger(ConfigServer.class);
++
  	public static void main(String[] args) {
++ 		System.setProperty("spring.config.name", "configserver");
++		Package pkg = EnableConfigServer.class.getPackage();
++		logger.info("{} {} by {}", pkg.getImplementationTitle(), pkg.getImplementationVersion(), pkg.getImplementationVendor());
+ 		SpringApplication.run(ConfigServer.class, args);
+ 	}
+
