@@ -56,6 +56,9 @@ $ manifest-tool --username * --password * push from-spec config-server/manifest.
 |link:redis/[steeltoeoss/redis]
 | Redis Server
 
+|link:uaa-server/[steeltoeoss/sample-uaa-server]
+| CloudFoundry UAA Server
+
 |link:zipkin/[steeltoeoss/zipkin]
 | Zipkin Trace Collector and UI
 
