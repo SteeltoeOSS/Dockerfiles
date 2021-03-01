@@ -4,10 +4,10 @@
 :!toc-title:
 :linkattrs:
 
-SteeltoeOSS https://github.com/cloudfoundry/uaa[CloudFoundry User Account and Authentication (UAA)] docker image.
+SteeltoeOSS https://github.com/cloudfoundry/uaa[CloudFoundry User Account and Authentication (UAA)] Docker image.
 
 == Running
 
 ----
-$ docker run -d -it -p 8080:8080 steeltoeoss/sample-uaa-server
+$ docker run -it -p 8080:8080 steeltoeoss/sample-uaa-server
 ----
