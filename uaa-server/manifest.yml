@@ -1,0 +1,7 @@
+image: steeltoeoss/sample-uaa-server:1.0.0-uaa.75.0
+tags: ['latest', '1.0.0']
+manifests:
+  - image: steeltoeoss/sample-uaa-server:1.0.0-uaa.75.0
+    platform:
+      os: linux
+      architecture: amd64
