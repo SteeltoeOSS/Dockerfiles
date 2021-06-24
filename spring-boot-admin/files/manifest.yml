@@ -1,0 +1,8 @@
+---
+applications:
+- name: sbo-admin
+  buildpack: java_buildpack_offline
+  memory: 1024M
+  path: build/libs/springbootadmin-2.2.3.jar
+  env:
+    GRADLE_OPTS: -Dorg.gradle.daemon=false
