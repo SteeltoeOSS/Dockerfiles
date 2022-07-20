@@ -16,7 +16,7 @@ $ docker run --publish 8888:8888 steeltoeoss/config-server
 .Custom Git Repo Configuration
 ----
 $ docker run --publish 8888:8888 steeltoeoss/config-server \
-    --spring.cloud.config.server.git.uri=https://github.com/myorg/myrepo
+    --spring.cloud.config.server.git.uri=https://github.com/myorg/myrepo.git
 ----
 
 .Local File System Configuration
