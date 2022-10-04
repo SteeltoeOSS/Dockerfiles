@@ -1,0 +1,17 @@
+= DotNet Cookbook Redirect
+
+A simple NGINX web server configured to redirect:
+
+* from: $scheme://dotnetcookbook.com/
+* to: $scheme://tanzu.vmware.com/developer/cookbooks/dotnet/
+
+
+.Build
+----
+docker build -t cookbook:redirect .
+----
+
+.Run
+----
+docker run --rm -it -p8080:80 cookbook:redirect
+----
