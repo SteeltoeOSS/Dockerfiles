@@ -1,8 +1,10 @@
 = DotNet Cookbook Redirect
 
 A simple NGINX web server configured to redirect:
-    from:    $scheme://dotnetcookbook.com/PATH
-    to:      $scheme://tanzu.vmware.com/developer/cookbooks/dotnet/PATH
+
+* from: $scheme://dotnetcookbook.com/PATH
+* to: $scheme://tanzu.vmware.com/developer/cookbooks/dotnet/PATH
+
 
 .Build
 ----
