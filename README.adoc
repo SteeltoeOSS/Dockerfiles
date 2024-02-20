@@ -8,11 +8,6 @@ GitHub repo for SteeltoeOSS Docker images.
 
 == Building
 
-.Build all images (not yet implemented)
-----
-$ build.ps1 -All
-----
-
 .Build a specific image
 ----
 $ build.ps1 config-server
@@ -38,28 +33,12 @@ $ manifest-tool --username * --password * push from-spec config-server/manifest.
 |link:config-server/[steeltoeoss/config-server]
 | Spring Cloud Config Server
 
-|link:dotnet-runtime/[steeltoeoss/dotnet-runtime]
-| Dotnet Runtime
-
 |link:eureka-server/[steeltoeoss/eureka-server]
 | Netflix Eureka Server
 
-|link:hystrix-dashboard/[steeltoeoss/hystrix-dashboard]
-| Netflix Hystrix Dashdboard
-
-|link:mssql/[steeltoeoss/mssql]
-| SQL Server
-
-|link:mysql/[steeltoeoss/mysql]
-| MySQL Server
-
-|link:redis/[steeltoeoss/redis]
-| Redis Server
-
+|link:spring-boot-admin/[steeltoeoss/spring-boot-admin]
+| Spring Boot Admin
 |link:uaa-server/[steeltoeoss/sample-uaa-server]
 | CloudFoundry UAA Server
-
-|link:zipkin/[steeltoeoss/zipkin]
-| Zipkin Trace Collector and UI
 
 |===
