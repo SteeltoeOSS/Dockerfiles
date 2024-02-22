@@ -1,5 +1,5 @@
---- configserver/build.gradle	2024-02-21 09:39:40.000000000 -0600
-+++ configserver/build.gradle	2024-02-21 11:03:17.615054116 -0600
+--- eurekaserver/build.gradle	2024-02-21 15:44:45.075409600 -0600
++++ eurekaserver/build.gradle	2024-02-21 15:43:09.000000000 -0600
 @@ -5,7 +5,7 @@
  }
 

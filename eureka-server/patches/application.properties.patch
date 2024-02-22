@@ -1,0 +1,8 @@
+--- eurekaserver/src/main/resources/application.properties	2024-02-21 15:43:09.000000000 -0600
++++ eurekaserver/src/main/resources/application.properties	2024-02-21 16:39:57.534331200 -0600
+@@ -1 +1,4 @@
+-
++server.port = 8761
++eureka.client.fetch-registry = false
++eureka.client.register-with-eureka = false
++eureka.server.wait-time-in-ms-when-sync-empty = 0
