@@ -5,7 +5,7 @@
 
  group = 'io.steeltoe.docker'
 -version = '0.0.1-SNAPSHOT'
-+version = '4.1.0'
++version = '<VERSION>'
 
  java {
  	sourceCompatibility = '17'
