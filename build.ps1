@@ -141,5 +141,3 @@ if (!$Tag)
 $docker_command = "docker build $Tag $ImageDirectory"
 Write-host $docker_command
 Invoke-Expression $docker_command
-
-# vim: et sw=4 sts=4
