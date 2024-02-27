@@ -8,19 +8,20 @@ GitHub repo for SteeltoeOSS Docker images.
 
 == Building
 
-.Build a specific image
+.Build a specific image:
 ----
 ./build.ps1 config-server
+----
+
 == Running
 
-You can list the created images using:
+.List the created images:
+
 ----
 docker images
 ----
 
 See the link:https://github.com/SteeltoeOSS/Samples/blob/main/CommonTasks.md/[docker instructions] on how to run the various docker images.
-
-----
 
 == Images
 
@@ -35,6 +36,7 @@ See the link:https://github.com/SteeltoeOSS/Samples/blob/main/CommonTasks.md/[do
 
 |link:spring-boot-admin/[steeltoeoss/spring-boot-admin]
 | Spring Boot Admin
+
 |link:uaa-server/[steeltoeoss/uaa-server]
 | CloudFoundry UAA Server
 
@@ -42,7 +44,7 @@ See the link:https://github.com/SteeltoeOSS/Samples/blob/main/CommonTasks.md/[do
 
 == Debug Image Building
 
-Via link:StackOverflow[https://stackoverflow.com/questions/32353055/how-to-start-a-stopped-docker-container-with-a-different-command/39329138#39329138] - Here are the commands to list files in a stopped container.
+Via link:https://stackoverflow.com/questions/32353055/how-to-start-a-stopped-docker-container-with-a-different-command/39329138#39329138[StackOverflow], here are the commands to list files in a stopped container.
 
 1. Find the id of the stopped container
 * `docker ps -a`
