@@ -11,6 +11,15 @@ GitHub repo for SteeltoeOSS Docker images.
 .Build a specific image
 ----
 ./build.ps1 config-server
+== Running
+
+You can list the created images using:
+----
+docker images
+----
+
+See the link:https://github.com/SteeltoeOSS/Samples/blob/main/CommonTasks.md/[docker instructions] on how to run the various docker images.
+
 ----
 
 == Images
