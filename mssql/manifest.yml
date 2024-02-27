@@ -1,7 +1,0 @@
-image: steeltoeoss/mssql:2017
-tags: ['latest']
-manifests:
-  - image: steeltoeoss/mssql-amd64-linux:2017-CU11
-    platform:
-      os: linux
-      architecture: amd64

@@ -2,20 +2,23 @@
 # Spring Config Server Build
 # -----------------------------------------------------------------------------
 
-FROM bellsoft/liberica-openjdk-alpine:11 as build
+FROM eclipse-temurin:21-alpine as build
 WORKDIR /scratch
-RUN apk add httpie
+RUN apk add httpie && apk add patch
 RUN http https://start.spring.io/starter.zip \
         type==gradle-project \
-        platformVersion==2.3.3.RELEASE \
-        jvmVersion==11 \
+        platformVersion==3.2.2 \
+        jvmVersion==21 \
         groupId==io.steeltoe.docker \
         artifactId==configserver \
         applicationName==ConfigServer \
-        dependencies==cloud-config-server \
+        language==java \
+        dependencies==cloud-config-server,actuator \
         --output configserver.zip
 RUN mkdir configserver && unzip -d configserver configserver.zip
+COPY metadata metadata
 COPY patches patches
+RUN sed -i "s/<VERSION>/$(cat metadata/IMAGE_VERSION)/g" patches/version.patch
 RUN for patch in patches/*.patch; do \
         echo "applying patch $(basename $patch)"; \
         cd configserver; \
@@ -23,15 +26,15 @@ RUN for patch in patches/*.patch; do \
         cd ..; \
         done
 RUN configserver/gradlew bootJar --project-dir configserver --no-daemon
+RUN mkdir output && \
+    cp "configserver/build/libs/configserver-$(cat metadata/IMAGE_VERSION).jar" output/configserver.jar
 
 # -----------------------------------------------------------------------------
 # Spring Config Server Linux Image
 # -----------------------------------------------------------------------------
 
-FROM bellsoft/liberica-openjdk-alpine:11
-ENV IMAGE_VERSION 2.2.5
-# ENV IMAGE_REVISION r1
+FROM eclipse-temurin:21
 WORKDIR /config-server
-COPY --from=build /scratch/configserver/build/libs .
+COPY --from=build /scratch/output .
 EXPOSE 8888
-ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "configserver-2.2.5.jar"]
+ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "configserver.jar"]

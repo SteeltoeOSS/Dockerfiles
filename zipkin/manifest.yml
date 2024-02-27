@@ -1,7 +1,0 @@
-image: steeltoeoss/zipkin:2.11.6
-tags: ['latest', '2', '2.11']
-manifests:
-  - image: steeltoeoss/zipkin-amd64-linux:2.11.6
-    platform:
-      os: linux
-      architecture: amd64

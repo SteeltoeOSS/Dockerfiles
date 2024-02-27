@@ -31,77 +31,113 @@
 
     .PARAMETER Tag
     Override the image tag.
+
+    .PARAMETER Registry
+    Set the container registry. Defaults to dockerhub under steeltoeoss.
 #>
 
 # -----------------------------------------------------------------------------
 # args
 # -----------------------------------------------------------------------------
 
-param(
+param (
    [Switch] $Help,
    [Switch] $List,
    [String] $Name,
-   [String] $Tag
+   [String] $Tag,
+   [String] $Registry
 )
-
-$DockerOrg = "steeltoeoss"
-$DockerArch = "amd64"
-$DockerOs = "linux"
 
 # -----------------------------------------------------------------------------
 # impl
 # -----------------------------------------------------------------------------
 
-if ($Help) {
+if ($Registry)
+{
+    $DockerOrg = $Registry
+}
+else
+{
+    $DockerOrg = "steeltoeoss"
+}
+
+if ($Help)
+{
     Get-Help $PSCommandPath -Detailed
     return
 }
 
-if ($Name -And $List) {
+if ($Name -And $List)
+{
     throw "-Name and -List are mutually exclusive"
 }
 
 $ImagesDirectory = Split-Path -Parent $PSCommandPath
 
-if ($List) {
-    Get-Childitem -Path $ImagesDirectory -Directory | Select-Object Name
+if ($List)
+{
+    Get-Childitem -Path $ImagesDirectory -Directory | Where-Object { !$_.Name.StartsWith(".") } | Select-Object Name
     return
 }
 
-if (!$Name) {
+if (!$Name)
+{
     throw "Name not specified; run with -Help for help"
 }
 
 $ImageDirectory = Join-Path $ImagesDirectory $Name
-if (!(Test-Path $ImageDirectory)) {
+if (!(Test-Path $ImageDirectory))
+{
     throw "Unknown image $Name; run with -List to list available images"
 }
-$Name =Split-Path -Leaf $ImageDirectory   # this removes stuff like ".\" prefix
 
-if (!(Get-Command "docker" -ErrorAction SilentlyContinue)) {
+$Name = Split-Path -Leaf $ImageDirectory   # this removes stuff like ".\" prefix
+
+if (!(Get-Command "docker" -ErrorAction SilentlyContinue))
+{
     throw "'docker' command not found"
 }
 
 $Dockerfile = Join-Path $ImageDirectory Dockerfile
-
-if (!(Test-Path $Dockerfile)) {
-    throw "No Dockerfile for $Image (expected $Dockerfile)"
+if (!(Test-Path $Dockerfile))
+{
+    throw "No Dockerfile for $Name (expected $Dockerfile)"
 }
 
-if (!$Tag) {
-    $Tag = "$DockerOrg/$Name-$DockerArch-$DockerOS"
-    $VersionMatcher = Select-String -Path $Dockerfile -Pattern '^ENV\s+IMAGE_VERSION\s*=?\s*(.+)$'
-    if ($VersionMatcher) {
-        $Version = $VersionMatcher.Matches.Groups[1]
+if (!$Tag)
+{
+    if (Test-Path "$ImageDirectory/metadata")
+    {
+        $Tag = "-t $DockerOrg/$Name"
+        $Version = Get-Content "$ImageDirectory/metadata/IMAGE_VERSION"
         $Tag += ":$Version"
-        $RevisionMatcher = Select-String -Path $Dockerfile -Pattern '^ENV\s+IMAGE_REVISION\s*=?\s*(.+)$'
-        if ($RevisionMatcher) {
-            $Revision = $RevisionMatcher.Matches.Groups[1]
+        $Revision = Get-Content "$ImageDirectory/metadata/IMAGE_REVISION"
+        if ($Revision)
+        {
             $Tag += "-$Revision"
+        }
+        $Tag += " $(Get-Content $ImageDirectory/metadata/ADDITIONAL_TAGS | ForEach { $_.replace("$Name","$DockerOrg/$Name") })"
+    }
+    else
+    {
+        $DockerArch = "amd64"
+        $DockerOs = "linux"
+        $Tag = "-t $DockerOrg/$Name-$DockerArch-$DockerOS"
+        $VersionMatcher = Select-String -Path $Dockerfile -Pattern '^ENV\s+IMAGE_VERSION\s*=?\s*(.+)$'
+        if ($VersionMatcher)
+        {
+            $Version = $VersionMatcher.Matches.Groups[1]
+            $Tag += ":$Version"
+            $RevisionMatcher = Select-String -Path $Dockerfile -Pattern '^ENV\s+IMAGE_REVISION\s*=?\s*(.+)$'
+            if ($RevisionMatcher)
+            {
+                $Revision = $RevisionMatcher.Matches.Groups[1]
+                $Tag += "-$Revision"
+            }
         }
     }
 }
 
-docker build -t $Tag $ImageDirectory
-
-# vim: et sw=4 sts=4
+$docker_command = "docker build $Tag $ImageDirectory"
+Write-host $docker_command
+Invoke-Expression $docker_command

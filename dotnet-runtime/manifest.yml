@@ -1,7 +1,0 @@
-image: steeltoeoss/dotnet-runtime:2.1
-tags: ['latest', '2']
-manifests:
-  - image: steeltoeoss/dotnet-runtime-amd64-linux:2.1
-    platform:
-      os: linux
-      architecture: amd64

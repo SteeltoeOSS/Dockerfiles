@@ -2,21 +2,39 @@
 # Netflix Eureka Server Build
 # -----------------------------------------------------------------------------
 
-FROM bellsoft/liberica-openjdk-alpine:8u252 as build
-ENV IMAGE_VERSION 2.1.3
-ENV IMAGE_REVISION r1
-ENV GRADLE_OPTS -Dorg.gradle.daemon=false
+FROM eclipse-temurin:21-alpine as build
 WORKDIR /scratch
-COPY files .
-RUN ./gradlew build
-RUN ln -s build/libs/eureka-server-${IMAGE_VERSION}.jar eureka-server.jar
+RUN apk add httpie && apk add patch
+RUN http https://start.spring.io/starter.zip \
+        type==gradle-project \
+        platformVersion==3.2.2 \
+        jvmVersion==21 \
+        groupId==io.steeltoe.docker \
+        artifactId==eurekaserver \
+        applicationName==EurekaServer \
+        language==java \
+        dependencies==cloud-eureka-server,actuator \
+        --output eurekaserver.zip
+RUN mkdir eurekaserver && unzip -d eurekaserver eurekaserver.zip
+COPY metadata metadata
+COPY patches patches
+RUN sed -i "s/<VERSION>/$(cat metadata/IMAGE_VERSION)/g" patches/version.patch
+RUN for patch in patches/*.patch; do \
+        echo "applying patch $(basename $patch)"; \
+        cd eurekaserver; \
+        patch -p1 < ../$patch; \
+        cd ..; \
+        done
+RUN eurekaserver/gradlew bootJar --project-dir eurekaserver --no-daemon
+RUN mkdir output && \
+    cp "eurekaserver/build/libs/eurekaserver-$(cat metadata/IMAGE_VERSION).jar" output/eurekaserver.jar
 
 # -----------------------------------------------------------------------------
 # Netflix Eureka Server Linux Image
 # -----------------------------------------------------------------------------
 
-FROM bellsoft/liberica-openjre-alpine:8u252
+FROM eclipse-temurin:21-alpine
 WORKDIR /eureka-server
-COPY --from=build /scratch .
+COPY --from=build /scratch/output .
 EXPOSE 8761
-ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "eureka-server.jar"]
+ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "eurekaserver.jar"]

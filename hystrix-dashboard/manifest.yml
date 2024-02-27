@@ -1,7 +1,0 @@
-image: steeltoeoss/hystrix-dashboard:1.4.5
-tags: ['latest', '1', '1.4']
-manifests:
-  - image: steeltoeoss/hystrix-dashboard-amd64-linux:1.4.5
-    platform:
-      os: linux
-      architecture: amd64

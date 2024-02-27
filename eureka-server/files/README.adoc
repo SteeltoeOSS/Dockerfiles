@@ -1,8 +1,0 @@
-Project initialized using:
-----
-$ curl https://start.spring.io/starter.zip \
-    -o eureka-server.zip \
-    -d type=gradle-project \
-    -d groupId=io.steeltoe.docker -d artifactId=eureka-server -d applicationName=EurekaServer \
-    -d dependencies=cloud-eureka-server
-----
