@@ -7,7 +7,7 @@ WORKDIR /scratch
 RUN apk add httpie && apk add patch
 RUN http https://start.spring.io/starter.zip \
         type==gradle-project \
-        platformVersion==3.2.2 \
+        platformVersion==3.2.4 \
         jvmVersion==21 \
         groupId==io.steeltoe.docker \
         artifactId==eurekaserver \

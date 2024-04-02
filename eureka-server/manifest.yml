@@ -1,7 +1,0 @@
-image: steeltoeoss/eureka-server:2.0.1
-tags: ['latest', '2', '2.0']
-manifests:
-  - image: steeltoeoss/eureka-server-amd64-linux:2.0.1
-    platform:
-      os: linux
-      architecture: amd64
