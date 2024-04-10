@@ -7,13 +7,13 @@ WORKDIR /scratch
 RUN apk add httpie && apk add patch
 RUN http https://start.spring.io/starter.zip \
         type==gradle-project \
-        platformVersion==3.2.2 \
+        platformVersion==3.2.4 \
         jvmVersion==21 \
         groupId==io.steeltoe.docker \
         artifactId==configserver \
         applicationName==ConfigServer \
         language==java \
-        dependencies==cloud-config-server,actuator \
+        dependencies==cloud-config-server,actuator,cloud-eureka \
         --output configserver.zip
 RUN mkdir configserver && unzip -d configserver configserver.zip
 COPY metadata metadata
@@ -27,7 +27,8 @@ RUN for patch in patches/*.patch; do \
         done
 RUN configserver/gradlew bootJar --project-dir configserver --no-daemon
 RUN mkdir output && \
-    cp "configserver/build/libs/configserver-$(cat metadata/IMAGE_VERSION).jar" output/configserver.jar
+    cp "configserver/build/libs/configserver-$(cat metadata/IMAGE_VERSION).jar" output/configserver.jar && \
+    cp configserver/src/main/resources/application.properties output/application.properties
 
 # -----------------------------------------------------------------------------
 # Spring Config Server Linux Image
@@ -37,4 +38,4 @@ FROM eclipse-temurin:21
 WORKDIR /config-server
 COPY --from=build /scratch/output .
 EXPOSE 8888
-ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "configserver.jar"]
+ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-Dspring.config.location=/config-server/application.properties", "-jar", "configserver.jar"]

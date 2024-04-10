@@ -1,8 +1,11 @@
 --- eurekaserver/src/main/resources/application.properties	2024-02-21 15:43:09.000000000 -0600
-+++ eurekaserver/src/main/resources/application.properties	2024-02-21 16:39:57.534331200 -0600
-@@ -1 +1,4 @@
--
++++ eurekaserver/src/main/resources/application.properties	2024-04-02 13:15:18.461432100 -0500
+@@ -0,0 +1,8 @@
 +server.port = 8761
 +eureka.client.fetch-registry = false
 +eureka.client.register-with-eureka = false
++eureka.server.enable-self-preservation = false
++eureka.server.evictionIntervalTimerInMs = 1000
++eureka.server.responseCacheUpdateIntervalMs = 1000
 +eureka.server.wait-time-in-ms-when-sync-empty = 0
++logging.level.com.netflix.eureka = TRACE
