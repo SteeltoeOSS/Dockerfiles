@@ -1,11 +1,10 @@
-FROM adoptopenjdk/openjdk11 as source
-RUN apt-get update && apt-get install -y git
-RUN git clone -b v75.0.0 https://github.com/cloudfoundry/uaa.git
-COPY uaa.yml /uaa/uaa/src/main/resources/uaa.yml
-WORKDIR /uaa
-RUN ./gradlew assemble
+# -----------------------------------------------------------------------------
+# UAA Server Build
+# -----------------------------------------------------------------------------
 
-FROM source as run
-WORKDIR /uaa
+FROM cloudfoundry/uaa:77.10.0
+COPY uaa.yml /uaa/uaa.yml
+COPY log4j2.properties /uaa/log4j2.properties
+ENV CLOUDFOUNDRY_CONFIG_PATH /uaa
+ENV SPRING_PROFILES hsql,default
 EXPOSE 8080
-CMD ["./gradlew", "run"]
