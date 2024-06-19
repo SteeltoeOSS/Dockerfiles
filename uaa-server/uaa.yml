@@ -1,5 +1,5 @@
   # This file defines UAA configuration that is compatible with Steeltoe Sample applications.
-  # Samples can be found in this repository https://github.com/SteeltoeOSS/Samples
+  # Samples can be found in the repository at https://github.com/SteeltoeOSS/Samples
   logging:
     config: /uaa/log4j2.properties
 
@@ -43,14 +43,18 @@
       order.admin: Permission to read all orders
       menu.read: Permission to read all menu items
       menu.write: Permission to create, update, and delete menu items
-      # ----- <Freddy's BBQ> ----- #
+      # ----- </Freddy's BBQ> ----- #
+# ----- <Steeltoe Security Samples> ----- #
       sampleapi.read: Permission to access a specific endpoint in the Steeltoe App Security Samples
+# ----- </Steeltoe Security Samples> ----- #
     users:
       # ----- <Freddy's BBQ> ----- #
       - customer|password|customer@testapp.com|Jon|Doe|menu.read,order.me
       - manager|password|manager@testapp.com|Jonathan|Doe|menu.read,menu.write,order.admin
       # ----- </Freddy's BBQ> ----- #
+# ----- <Steeltoe Security Samples> ----- #
       - testuser|password|user@testapp.com|Jane|Doe|sampleapi.read
+# ----- </Steeltoe Security Samples> ----- #
     userids_enabled: true
     user:
       override: true
@@ -104,7 +108,7 @@
         scope: openid,menu.read,order.me
         secret: customerportal_secret
       # ----- </Freddy's BBQ> ---- #
-      # --- <App Security Samples> --- #
+      # --- <Steeltoe Security Samples> --- #
       steeltoesamplesserver:
         authorities: uaa.resource, sampleapi.read
         authorized-grant-types: client_credentials
@@ -134,7 +138,7 @@
         resource_ids: sampleapi.read
         scope: openid,profile,sampleapi.read
         secret: sso_secret
-      # --- <App Security Samples> --- #
+      # --- </Steeltoe Security Samples> --- #
   jwt:
     token:
       refresh:
