@@ -44,17 +44,17 @@
       menu.read: Permission to read all menu items
       menu.write: Permission to create, update, and delete menu items
       # ----- </Freddy's BBQ> ----- #
-# ----- <Steeltoe Security Samples> ----- #
+      # ----- <Steeltoe Security Samples> ----- #
       sampleapi.read: Permission to access a specific endpoint in the Steeltoe App Security Samples
-# ----- </Steeltoe Security Samples> ----- #
+      # ----- </Steeltoe Security Samples> ----- #
     users:
       # ----- <Freddy's BBQ> ----- #
       - customer|password|customer@testapp.com|Jon|Doe|menu.read,order.me
       - manager|password|manager@testapp.com|Jonathan|Doe|menu.read,menu.write,order.admin
       # ----- </Freddy's BBQ> ----- #
-# ----- <Steeltoe Security Samples> ----- #
+      # ----- <Steeltoe Security Samples> ----- #
       - testuser|password|user@testapp.com|Jane|Doe|sampleapi.read
-# ----- </Steeltoe Security Samples> ----- #
+      # ----- </Steeltoe Security Samples> ----- #
     userids_enabled: true
     user:
       override: true
@@ -78,7 +78,6 @@
         - roles
         - user_attributes
         - uaa.offline_token
-        - sampleapi.read
     # Always override clients on startup
     client:
       override: true
@@ -105,7 +104,6 @@
         authorities: uaa.resource
         authorized-grant-types: authorization_code
         redirect-uri: http://localhost:8082/login
-        scope: openid,menu.read,order.me
         secret: customerportal_secret
       # ----- </Freddy's BBQ> ---- #
       # --- <Steeltoe Security Samples> --- #
