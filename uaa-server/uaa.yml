@@ -104,6 +104,7 @@
         authorities: uaa.resource
         authorized-grant-types: authorization_code
         redirect-uri: http://localhost:8082/login
+        scope: openid,menu.read,order.me
         secret: customerportal_secret
       # ----- </Freddy's BBQ> ---- #
       # --- <Steeltoe Security Samples> --- #
