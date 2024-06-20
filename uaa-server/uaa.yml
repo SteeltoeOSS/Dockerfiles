@@ -1,10 +1,15 @@
+  # This file defines UAA configuration that is compatible with Steeltoe Sample applications.
+  # Samples can be found in the repository at https://github.com/SteeltoeOSS/Samples
+  logging:
+    config: /uaa/log4j2.properties
+
   issuer:
     uri: http://localhost:8080/uaa
 
   encryption:
     encryption_keys:
-      - label: uaa-encryption-key-1
-        passphrase: password
+    - label: uaa-encryption-key-1
+      passphrase: password
     active_key_label: uaa-encryption-key-1
 
   scim:
@@ -33,14 +38,23 @@
       uaa.admin: Act as an administrator throughout the UAA
       uaa.none: Forbid acting as a user
       uaa.offline_token: Allow offline access
+      # ----- <Freddy's BBQ> ----- #
       order.me: Permission to read personal orders
       order.admin: Permission to read all orders
       menu.read: Permission to read all menu items
       menu.write: Permission to create, update, and delete menu items
+      # ----- </Freddy's BBQ> ----- #
+      # ----- <Steeltoe Security Samples> ----- #
+      sampleapi.read: Permission to access a specific endpoint in the Steeltoe App Security Samples
+      # ----- </Steeltoe Security Samples> ----- #
     users:
-      - admin|password|admin@testapp.com|Administrative|Account|uaa
-      - customer|password|customer@testapp.com|John|Doe|menu.read,order.me|uaa
-      - manager|password|manager@testapp.com|Jonathan|Doe|menu.read,menu.write,order.admin|uaa
+      # ----- <Freddy's BBQ> ----- #
+      - customer|password|customer@testapp.com|Jon|Doe|menu.read,order.me
+      - manager|password|manager@testapp.com|Jonathan|Doe|menu.read,menu.write,order.admin
+      # ----- </Freddy's BBQ> ----- #
+      # ----- <Steeltoe Security Samples> ----- #
+      - testuser|password|user@testapp.com|Jane|Doe|sampleapi.read
+      # ----- </Steeltoe Security Samples> ----- #
     userids_enabled: true
     user:
       override: true
@@ -64,39 +78,73 @@
         - roles
         - user_attributes
         - uaa.offline_token
-    clients:
-      admin-portal:
-        authorized-grant-types: authorization_code
-        scope: openid,menu.read,menu.write,order.admin
-        authorities: uaa.resource
-        redirect-uri: http://localhost:63757/signin-cloudfoundry
-        app-launch-url: http://localhost:63757/Home/
-        show-on-homepage: true
-        secret: adminportal_secret
-        description: "UI Admin Portal for administering orders"
-      order-service:
-        authorized-grant-types: client_credentials
-        scope: openid,menu.write,order.admin
-        authorities: uaa.resource
-        secret: orderservice_secret
-        description: "API Service for administering orders"
-      customer-portal:
-        secret: secret
-        authorized-grant-types: authorization_code
-        scope: openid,menu.read,order.me
-        authorities: uaa.resource
-        redirect-uri: http://localhost:8082/login
+    # Always override clients on startup
+    client:
+      override: true
 
+    # List of OAuth clients
+    clients:
+      # ----- <Freddy's BBQ> ----- #
+      admin-portal:
+        app-launch-url: http://localhost:63757/Home/
+        authorities: uaa.resource
+        authorized-grant-types: authorization_code
+        description: "UI Admin Portal for administering orders"
+        redirect-uri: http://localhost:63757/signin-cloudfoundry
+        scope: openid,menu.read,menu.write,order.admin
+        secret: adminportal_secret
+        show-on-homepage: true
+      order-service:
+        authorities: uaa.resource
+        authorized-grant-types: client_credentials
+        description: "API Service for administering orders"
+        scope: openid,menu.write,order.admin
+        secret: orderservice_secret
+      customer-portal:
+        authorities: uaa.resource
+        authorized-grant-types: authorization_code
+        redirect-uri: http://localhost:8082/login
+        scope: openid,menu.read,order.me
+        secret: customerportal_secret
+      # ----- </Freddy's BBQ> ---- #
+      # --- <Steeltoe Security Samples> --- #
+      steeltoesamplesserver:
+        authorities: uaa.resource, sampleapi.read
+        authorized-grant-types: client_credentials
+        description: Steeltoe application security Sample Server
+        secret: server_secret
+      steeltoesamplesclient:
+        app-launch-url: https://localhost:7072
+        authorized-grant-types: authorization_code, client_credentials
+        autoapprove:
+        - openid
+        - profile
+        description: Steeltoe application security Sample Client
+        redirect-uri: https://localhost:7072/signin-oidc
+        resource_ids: sampleapi.read
+        scope: openid,profile,sampleapi.read
+        secret: client_secret
+      ssotile:
+        authorized-grant-types: authorization_code, client_credentials
+        autoapprove:
+        - openid
+        - profile
+        description: Credentials for use with UAA server in Cloud Foundry environment
+
+        # CHANGE THIS VALUE TO MATCH YOUR ENVIRONMENT
+        redirect-uri: https://steeltoe.login.sys.dhaka.cf-app.com/**
+
+        resource_ids: sampleapi.read
+        scope: openid,profile,sampleapi.read
+        secret: sso_secret
+      # --- </Steeltoe Security Samples> --- #
   jwt:
     token:
       refresh:
         format: opaque
       policy:
-        accessTokenValiditySeconds: 43200
-        refreshTokenValiditySeconds: 2592000
-        global:
-          accessTokenValiditySeconds: 43200
-          refreshTokenValiditySeconds: 2592000
+        # Will override global validity policies for the default zone only.
+        #accessTokenValiditySeconds: 600
         activeKeyId: uaa-jwt-key-1
         keys:
           uaa-jwt-key-1:
@@ -135,7 +183,7 @@
       N+l4lnMda79eSp3OMmq9AkA0p79BvYsLshUJJnvbk76pCjR28PK4dV1gSDUEqQMB
       qy45ptdwJLqLJCeNoR0JUcDNIRhOCuOPND7pcMtX6hI/
       -----END RSA PRIVATE KEY-----
-    # serviceProviderKeyPassword: "" # TODO: Remove this when UAA defaults this value
+    serviceProviderKeyPassword: ""
     serviceProviderCertificate: |
       -----BEGIN CERTIFICATE-----
       MIIDSTCCArKgAwIBAgIBADANBgkqhkiG9w0BAQQFADB8MQswCQYDVQQGEwJhdzEO
@@ -157,48 +205,5 @@
       KdcZYgl4l/L6PxJ982SRhc83ZW2dkAZI4M0/Ud3oePe84k8jm3A7EvH5wi5hvCkK
       RpuRBwn3Ei+jCRouxTbzKPsuCVB+1sNyxMTXzf0=
       -----END CERTIFICATE-----
-  assetBaseUrl: /resources/oss
-
-  zones:
-    internal:
-      hostnames:
-        - localhost:8080/uaa
-
-  uaa:
-    # The hostname of the UAA that this login server will connect to
-    url: http://localhost:8080/uaa
-    token:
-      url: http://localhost:8080/uaa/oauth/token
-    approvals:
-      url: http://localhost:8080/uaa/approvals
-    login:
-      url: http://localhost:8080/uaa/authenticate
-    limitedFunctionality:
-      enabled: false
-      whitelist:
-        endpoints:
-          - /oauth/authorize/**
-          - /oauth/token/**
-          - /check_token/**
-          - /login/**
-          - /login.do
-          - /logout/**
-          - /logout.do
-          - /saml/**
-          - /autologin/**
-          - /authenticate/**
-          - /idp_discovery/**
-        methods:
-          - GET
-          - HEAD
-          - OPTIONS
-
-  ldap:
-    profile:
-      file: ldap/ldap-search-and-bind.xml
-    base:
-      url: 'ldap://localhost:389/'
-      userDn: 'cn=admin,dc=test,dc=com'
-      password: 'password'
-      searchBase: 'dc=test,dc=com'
-      searchFilter: 'cn={0}'
+  #The secret that an external login server will use to authenticate to the uaa using the id `login`
+  LOGIN_SECRET: loginsecret
