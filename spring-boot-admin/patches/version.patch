@@ -1,0 +1,15 @@
+--- ./build.gradle	2024-09-20 12:37:35.000000000 -0500
++++ ./build.gradle	2024-09-20 12:39:57.439918218 -0500
+@@ -5,11 +5,11 @@
+ }
+
+ group = 'io.steeltoe.docker'
+-version = '0.0.1-SNAPSHOT'
++version = '<VERSION>'
+
+ java {
+ 	toolchain {
+-		languageVersion = JavaLanguageVersion.of(17)
++		languageVersion = JavaLanguageVersion.of(21)
+ 	}
+ }
