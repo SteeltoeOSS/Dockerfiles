@@ -1,0 +1,51 @@
+name: Build Spring Boot Admin Server
+
+on:
+  pull_request:
+    branches:
+    - main
+    paths:
+    - 'spring-boot-admin/**'
+  push:
+    branches:
+    - main
+    paths:
+    - 'spring-boot-admin/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: 'read'
+
+env:
+  IMAGE_NAME: ${{ github.event_name == 'pull_request' && 'spring-boot-admin-pr' || 'spring-boot-admin' }}
+  REGISTRY: ${{ vars.DOCKER_REGISTRY }}
+
+jobs:
+  build-push:
+    name: Build and push image
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build Image
+      run: ./build.ps1 -Name ${{ env.IMAGE_NAME }} -Registry ${{ env.REGISTRY }}
+
+    - name: Login to private container registry
+      if: ${{ github.event_name == 'pull_request' }}
+      uses: docker/login-action@v3
+      with:
+        registry: "${{ vars.DOCKER_REGISTRY }}"
+        username: "${{ secrets.DOCKER_USERNAME }}"
+        password: "${{ secrets.DOCKER_PASSWORD }}"
+    - name: Login to Docker Hub
+      if: ${{ github.event_name != 'pull_request' }}
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Push image
+      run: docker push --all-tags ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}

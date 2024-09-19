@@ -1,0 +1,6 @@
+--- ./src/main/resources/application.properties	2024-09-19 14:13:49.968047867 -0500
++++ ./src/main/resources/application.properties	2024-09-19 14:13:24.727639700 -0500
+@@ -1 +1,2 @@
+-spring.application.name=demo
++spring.application.name=SpringBootAdmin
++server.port=9090

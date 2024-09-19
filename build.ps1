@@ -120,21 +120,7 @@ if (!$Tag)
     }
     else
     {
-        $DockerArch = "amd64"
-        $DockerOs = "linux"
-        $Tag = "-t $DockerOrg/$Name-$DockerArch-$DockerOS"
-        $VersionMatcher = Select-String -Path $Dockerfile -Pattern '^ENV\s+IMAGE_VERSION\s*=?\s*(.+)$'
-        if ($VersionMatcher)
-        {
-            $Version = $VersionMatcher.Matches.Groups[1]
-            $Tag += ":$Version"
-            $RevisionMatcher = Select-String -Path $Dockerfile -Pattern '^ENV\s+IMAGE_REVISION\s*=?\s*(.+)$'
-            if ($RevisionMatcher)
-            {
-                $Revision = $RevisionMatcher.Matches.Groups[1]
-                $Tag += "-$Revision"
-            }
-        }
+        throw "No metadata found for $Name"
     }
 }
 
