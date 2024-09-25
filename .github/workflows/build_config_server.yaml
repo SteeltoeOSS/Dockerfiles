@@ -20,8 +20,8 @@ permissions:
   contents: 'read'
 
 env:
-  IMAGE_NAME: config-server
-  REGISTRY: ${{ github.event_name == 'pull_request' && vars.DOCKER_REGISTRY || 'steeltoeoss' }}
+  IMAGE_NAME: ${{ github.event_name == 'pull_request' && 'config-server-pr' || 'config-server' }}
+  REGISTRY: ${{ vars.DOCKER_REGISTRY }}
 
 jobs:
   build-push:

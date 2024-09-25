@@ -1,6 +1,6 @@
 --- configserver/build.gradle	2024-02-21 09:39:40.000000000 -0600
 +++ configserver/build.gradle	2024-02-21 11:03:17.615054116 -0600
-@@ -5,7 +5,7 @@
+@@ -5,11 +5,11 @@
  }
 
  group = 'io.steeltoe.docker'
@@ -8,4 +8,8 @@
 +version = '<VERSION>'
 
  java {
- 	sourceCompatibility = '17'
+ 	toolchain {
+-		languageVersion = JavaLanguageVersion.of(17)
++		languageVersion = JavaLanguageVersion.of(21)
+ 	}
+ }
