@@ -1,6 +1,6 @@
 --- eurekaserver/build.gradle	2024-02-21 15:44:45.075409600 -0600
 +++ eurekaserver/build.gradle	2024-02-21 15:43:09.000000000 -0600
-@@ -5,7 +5,7 @@
+@@ -5,11 +5,11 @@
  }
 
  group = 'io.steeltoe.docker'
@@ -8,4 +8,8 @@
 +version = '<VERSION>'
 
  java {
- 	sourceCompatibility = '17'
+ 	toolchain {
+-		languageVersion = JavaLanguageVersion.of(17)
++		languageVersion = JavaLanguageVersion.of(21)
+ 	}
+ }

@@ -2,18 +2,18 @@
 # Spring Config Server Build
 # -----------------------------------------------------------------------------
 
-FROM eclipse-temurin:21-alpine as build
+FROM eclipse-temurin:21-alpine AS build
 WORKDIR /scratch
-RUN apk add httpie && apk add patch
-RUN http https://start.spring.io/starter.zip \
-        type==gradle-project \
-        platformVersion==3.2.4 \
-        jvmVersion==21 \
-        groupId==io.steeltoe.docker \
-        artifactId==configserver \
-        applicationName==ConfigServer \
-        language==java \
-        dependencies==cloud-config-server,actuator,cloud-eureka \
+RUN apk update && apk add ca-certificates && apk add curl && apk add patch
+RUN curl --get https://start.spring.io/starter.zip \
+        -d "type=gradle-project" \
+        -d "platformVersion=3.3.4" \
+        -d "jvmVersion=21" \
+        -d "groupId=io.steeltoe.docker" \
+        -d "artifactId=configserver" \
+        -d "applicationName=ConfigServer" \
+        -d "language=java" \
+        -d "dependencies=cloud-config-server,actuator,cloud-eureka" \
         --output configserver.zip
 RUN mkdir configserver && unzip -d configserver configserver.zip
 COPY metadata metadata
