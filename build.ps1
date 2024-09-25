@@ -34,6 +34,9 @@
 
     .PARAMETER Registry
     Set the container registry. Defaults to dockerhub under steeltoeoss.
+
+    .PARAMETER DirectoryName
+    Name of directory holding files that define the image. Defaults to the same value used for "Name".
 #>
 
 # -----------------------------------------------------------------------------
@@ -45,7 +48,8 @@ param (
    [Switch] $List,
    [String] $Name,
    [String] $Tag,
-   [String] $Registry
+   [String] $Registry,
+   [String] $DirectoryName
 )
 
 # -----------------------------------------------------------------------------
@@ -85,13 +89,16 @@ if (!$Name)
     throw "Name not specified; run with -Help for help"
 }
 
-$ImageDirectory = Join-Path $ImagesDirectory $Name
-if (!(Test-Path $ImageDirectory))
+if (!$DirectoryName)
 {
-    throw "Unknown image $Name; run with -List to list available images"
+    $DirectoryName = $Name
 }
 
-$Name = Split-Path -Leaf $ImageDirectory   # this removes stuff like ".\" prefix
+$ImageDirectory = Join-Path $ImagesDirectory $DirectoryName
+if (!(Test-Path $ImageDirectory))
+{
+    throw "Unknown image $DirectoryName; run with -List to list available images"
+}
 
 if (!(Get-Command "docker" -ErrorAction SilentlyContinue))
 {
@@ -101,7 +108,7 @@ if (!(Get-Command "docker" -ErrorAction SilentlyContinue))
 $Dockerfile = Join-Path $ImageDirectory Dockerfile
 if (!(Test-Path $Dockerfile))
 {
-    throw "No Dockerfile for $Name (expected $Dockerfile)"
+    throw "No Dockerfile for $DirectoryName (expected $Dockerfile)"
 }
 
 if (!$Tag)
@@ -116,11 +123,11 @@ if (!$Tag)
         {
             $Tag += "-$Revision"
         }
-        $Tag += " $(Get-Content $ImageDirectory/metadata/ADDITIONAL_TAGS | ForEach { $_.replace("$Name","$DockerOrg/$Name") })"
+        $Tag += " $(Get-Content $ImageDirectory/metadata/ADDITIONAL_TAGS | ForEach-Object { $_.replace("$DirectoryName","$DockerOrg/$Name") })"
     }
     else
     {
-        throw "No metadata found for $Name"
+        throw "No metadata found for $DirectoryName"
     }
 }
 
