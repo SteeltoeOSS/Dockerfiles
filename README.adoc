@@ -4,7 +4,7 @@
 :!toc-title:
 :linkattrs:
 
-GitHub repo for SteeltoeOSS Docker images.
+GitHub repo for server images to use for local development with SteeltoeOSS.
 
 == Building
 
@@ -28,16 +28,16 @@ See the link:https://github.com/SteeltoeOSS/Samples/blob/main/CommonTasks.md/[do
 |===
 |Name |Description
 
-|link:config-server/[steeltoeoss/config-server]
+|link:config-server/[steeltoe.azurecr.io/config-server]
 | Spring Cloud Config Server
 
-|link:eureka-server/[steeltoeoss/eureka-server]
+|link:eureka-server/[steeltoe.azurecr.io/eureka-server]
 | Netflix Eureka Server
 
-|link:spring-boot-admin/[steeltoeoss/spring-boot-admin]
+|link:spring-boot-admin/[steeltoe.azurecr.io/spring-boot-admin]
 | Spring Boot Admin
 
-|link:uaa-server/[steeltoeoss/uaa-server]
+|link:uaa-server/[steeltoe.azurecr.io/uaa-server]
 | CloudFoundry UAA Server
 
 |===

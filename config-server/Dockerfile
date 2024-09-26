@@ -34,7 +34,7 @@ RUN mkdir output && \
 # Spring Config Server Linux Image
 # -----------------------------------------------------------------------------
 
-FROM eclipse-temurin:21
+FROM eclipse-temurin:21-alpine
 WORKDIR /config-server
 COPY --from=build /scratch/output .
 EXPOSE 8888

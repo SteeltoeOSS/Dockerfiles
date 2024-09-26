@@ -1,27 +1,27 @@
-= steeltoeoss/config-server
+= steeltoe.azurecr.io/config-server
 :toc: preamble
 :toclevels: 1
 :!toc-title:
 :linkattrs:
 
-SteeltoeOSS https://cloud.spring.io/spring-cloud-config/[Spring Cloud Config Server] docker image.
+Image for SteeltoeOSS local development with https://cloud.spring.io/spring-cloud-config/[Spring Cloud Config Server].
 
 == Running
 
 .Default Configuration
 ----
-$ docker run --publish 8888:8888 steeltoeoss/config-server
+$ docker run --publish 8888:8888 steeltoe.azurecr.io/config-server
 ----
 
 .Custom Git Repo Configuration
 ----
-$ docker run --publish 8888:8888 steeltoeoss/config-server \
+$ docker run --publish 8888:8888 steeltoe.azurecr.io/config-server \
     --spring.cloud.config.server.git.uri=https://github.com/myorg/myrepo.git
 ----
 
 .Local File System Configuration
 ----
-$ docker run --publish 8888:8888 --volume /path/to/my/config:/config steeltoeoss/config-server \
+$ docker run --publish 8888:8888 --volume /path/to/my/config:/config steeltoe.azurecr.io/config-server \
     --spring.profiles.active=native \
     --spring.cloud.config.server.native.searchLocations=file:///config
 ----
