@@ -34,9 +34,6 @@
 
     .PARAMETER Registry
     Set the container registry. Defaults to dockerhub under steeltoeoss.
-
-    .PARAMETER DirectoryName
-    Name of directory holding files that define the image. Defaults to the same value used for "Name".
 #>
 
 # -----------------------------------------------------------------------------
@@ -48,8 +45,7 @@ param (
    [Switch] $List,
    [String] $Name,
    [String] $Tag,
-   [String] $Registry,
-   [String] $DirectoryName
+   [String] $Registry
 )
 
 # -----------------------------------------------------------------------------
@@ -89,15 +85,10 @@ if (!$Name)
     throw "Name not specified; run with -Help for help"
 }
 
-if (!$DirectoryName)
-{
-    $DirectoryName = $Name
-}
-
-$ImageDirectory = Join-Path $ImagesDirectory $DirectoryName
+$ImageDirectory = Join-Path $ImagesDirectory $Name
 if (!(Test-Path $ImageDirectory))
 {
-    throw "Unknown image $DirectoryName; run with -List to list available images"
+    throw "Unknown image $Name; run with -List to list available images"
 }
 
 if (!(Get-Command "docker" -ErrorAction SilentlyContinue))
@@ -108,7 +99,7 @@ if (!(Get-Command "docker" -ErrorAction SilentlyContinue))
 $Dockerfile = Join-Path $ImageDirectory Dockerfile
 if (!(Test-Path $Dockerfile))
 {
-    throw "No Dockerfile for $DirectoryName (expected $Dockerfile)"
+    throw "No Dockerfile for $Name (expected $Dockerfile)"
 }
 
 if (!$Tag)
@@ -123,14 +114,18 @@ if (!$Tag)
         {
             $Tag += "-$Revision"
         }
-        $Tag += " $(Get-Content $ImageDirectory/metadata/ADDITIONAL_TAGS | ForEach-Object { $_.replace("$DirectoryName","$DockerOrg/$Name") })"
+        $Tag += " $(Get-Content $ImageDirectory/metadata/ADDITIONAL_TAGS | ForEach-Object { $_.replace("$Name","$DockerOrg/$Name") })"
     }
     else
     {
-        throw "No metadata found for $DirectoryName"
+        throw "No metadata found for $Name"
     }
+}
+else
+{
+    Write-Host "Tag value set by script parameter:" $Tag
 }
 
 $docker_command = "docker build $Tag $ImageDirectory"
-Write-host $docker_command
+Write-Host $docker_command
 Invoke-Expression $docker_command

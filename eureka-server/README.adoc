@@ -1,15 +1,15 @@
-= steeltoeoss/eureka-server
+= steeltoe.azurecr.io/eureka-server
 :toc: preamble
 :toclevels: 1
 :!toc-title:
 :linkattrs:
 
-SteeltoeOSS https://cloud.spring.io/spring-cloud-netflix/[Spring Cloud Eureka Server] docker image.
+Image for SteeltoeOSS local development with https://cloud.spring.io/spring-cloud-netflix/[Spring Cloud Eureka Server].
 
 == Running
 
 ----
-$ docker run --publish 8761:8761 steeltoeoss/eureka-server
+$ docker run --publish 8761:8761 steeltoe.azurecr.io/eureka-server
 ----
 
 == Resources
