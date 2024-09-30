@@ -5,11 +5,13 @@ on:
     branches:
     - main
     paths:
+    - '.github/workflows/build_uaa_server.yaml'
     - 'uaa-server/**'
   push:
     branches:
     - main
     paths:
+    - '.github/workflows/build_uaa_server.yaml'
     - 'uaa-server/**'
 
 concurrency:
