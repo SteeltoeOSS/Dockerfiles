@@ -7,7 +7,7 @@ WORKDIR /scratch
 RUN apk update && apk add ca-certificates && apk add curl && apk add patch
 RUN curl --get https://start.spring.io/starter.zip \
         -d "type=gradle-project" \
-        -d "platformVersion=3.3.4" \
+        -d "platformVersion=3.3.6" \
         -d "jvmVersion=21" \
         -d "groupId=io.steeltoe.docker" \
         -d "artifactId=springbootadmin" \
