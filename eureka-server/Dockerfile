@@ -1,24 +1,26 @@
 # -----------------------------------------------------------------------------
 # Netflix Eureka Server Build
 # -----------------------------------------------------------------------------
+ARG JVM=21
 
-FROM eclipse-temurin:21-alpine AS build
+FROM eclipse-temurin:$JVM-alpine AS build
+ARG JVM
 WORKDIR /scratch
 RUN apk update && apk add ca-certificates && apk add curl && apk add patch
 RUN curl --get https://start.spring.io/starter.zip \
-        -d "type=gradle-project" \
-        -d "platformVersion=3.3.6" \
-        -d "jvmVersion=21" \
-        -d "groupId=io.steeltoe.docker" \
-        -d "artifactId=eurekaserver" \
-        -d "applicationName=EurekaServer" \
-        -d "language=java" \
-        -d "dependencies=cloud-eureka-server,actuator" \
+        -d type=gradle-project \
+        -d bootVersion=3.3.6 \
+        -d javaVersion=$JVM \
+        -d groupId=io.steeltoe.docker \
+        -d artifactId=eurekaserver \
+        -d applicationName=EurekaServer \
+        -d language=java \
+        -d dependencies=cloud-eureka-server,actuator \
+        -d version=4.1.3 \
         --output eurekaserver.zip
 RUN mkdir eurekaserver && unzip -d eurekaserver eurekaserver.zip
 COPY metadata metadata
 COPY patches patches
-RUN sed -i "s/<VERSION>/$(cat metadata/IMAGE_VERSION)/g" patches/version.patch
 RUN for patch in patches/*.patch; do \
         echo "applying patch $(basename $patch)"; \
         cd eurekaserver; \
@@ -33,7 +35,7 @@ RUN mkdir output && \
 # Netflix Eureka Server Linux Image
 # -----------------------------------------------------------------------------
 
-FROM eclipse-temurin:21-alpine
+FROM eclipse-temurin:$JVM-alpine
 WORKDIR /eureka-server
 COPY --from=build /scratch/output .
 EXPOSE 8761
