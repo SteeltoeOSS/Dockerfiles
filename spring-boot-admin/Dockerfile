@@ -36,5 +36,5 @@ RUN mkdir output && \
 FROM eclipse-temurin:21-alpine
 WORKDIR /springbootadmin
 COPY --from=build /scratch/output .
-EXPOSE 9090
+EXPOSE 9099
 ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "springbootadmin.jar"]
