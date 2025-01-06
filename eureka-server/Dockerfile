@@ -9,14 +9,14 @@ WORKDIR /scratch
 RUN apk update && apk add ca-certificates && apk add curl && apk add patch
 RUN curl --get https://start.spring.io/starter.zip \
         -d type=gradle-project \
-        -d bootVersion=3.3.6 \
+        -d bootVersion=3.4.1 \
         -d javaVersion=$JVM \
         -d groupId=io.steeltoe.docker \
         -d artifactId=eurekaserver \
         -d applicationName=EurekaServer \
         -d language=java \
         -d dependencies=cloud-eureka-server,actuator \
-        -d version=4.1.3 \
+        -d version=4.2.0 \
         --output eurekaserver.zip
 RUN mkdir eurekaserver && unzip -d eurekaserver eurekaserver.zip
 COPY metadata metadata
