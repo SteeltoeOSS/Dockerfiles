@@ -9,14 +9,14 @@ WORKDIR /scratch
 RUN apk update && apk add ca-certificates && apk add curl && apk add patch
 RUN curl https://start.spring.io/starter.zip \
         -d type=gradle-project \
-        -d bootVersion=3.3.6 \
+        -d bootVersion=3.4.1 \
         -d javaVersion=$JVM \
         -d groupId=io.steeltoe.docker \
         -d artifactId=springbootadmin \
         -d applicationName=SpringBootAdmin \
         -d language=java \
         -d dependencies=codecentric-spring-boot-admin-server \
-        -d version=3.3.6 \
+        -d version=3.4.1 \
         --output springbootadmin.zip
 RUN mkdir springbootadmin && unzip -d springbootadmin springbootadmin.zip
 COPY metadata metadata
