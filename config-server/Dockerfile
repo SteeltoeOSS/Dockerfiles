@@ -9,14 +9,14 @@ WORKDIR /scratch
 RUN apk update && apk add ca-certificates && apk add curl && apk add patch
 RUN curl --get https://start.spring.io/starter.zip \
         -d type=gradle-project \
-        -d bootVersion=3.4.1 \
+        -d bootVersion=3.5.4 \
         -d javaVersion=$JVM \
         -d groupId=io.steeltoe.docker \
         -d artifactId=configserver \
         -d applicationName=ConfigServer \
         -d language=java \
-        -d dependencies=cloud-config-server,actuator,cloud-eureka \
-        -d version=4.2.0 \
+        -d dependencies=cloud-config-server,actuator,cloud-eureka,security \
+        -d version=4.3.0 \
         --output configserver.zip
 RUN mkdir configserver && unzip -d configserver configserver.zip
 COPY metadata metadata

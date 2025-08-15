@@ -26,6 +26,14 @@ $ docker run --publish 8888:8888 --volume /path/to/my/config:/config steeltoe.az
     --spring.cloud.config.server.native.searchLocations=file:///config
 ----
 
+.With Basic Auth
+----
+$ docker run --publish 8888:8888 steeltoe.azurecr.io/config-server \
+    --auth.enabled=true \
+    --auth.username=myCustomUser \
+    --auth.password=myCustomPassword
+----
+
 == Resources
 
 |===
