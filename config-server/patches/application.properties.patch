@@ -1,6 +1,6 @@
 --- configserver/src/main/resources/application.properties	2024-02-21 15:43:09.000000000 -0600
-+++ configserver/src/main/resources/application.properties	2024-04-02 13:15:18.461432100 -0500
-@@ -0,0 +1,9 @@
++++ configserver/src/main/resources/application.properties	2025-08-15 13:15:18.461432100 -0500
+@@ -0,0 +1,10 @@
 +server.port = 8888
 +spring.cloud.config.server.git.uri = https://github.com/spring-cloud-samples/config-repo
 +eureka.client.enabled = false
@@ -10,3 +10,4 @@
 +eureka.instance.virtualhostname = configserver
 +eureka.instance.hostname = host.docker.internal
 +eureka.instance.instanceId = host.docker.internal:configserver:8888
++auth.enabled = false

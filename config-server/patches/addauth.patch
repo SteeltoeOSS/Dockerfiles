@@ -1,0 +1,65 @@
+--- /dev/null
++++ configserver/src/main/java/io/steeltoe/docker/configserver/BasicOrNoAuthConfig.java	2025-08-15 13:15:18.461432100 -0500
+@@ -0,0 +1,62 @@
++package io.steeltoe.docker.configserver;
++
++import org.springframework.beans.factory.annotation.Value;
++import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
++import org.springframework.boot.autoconfigure.security.SecurityProperties;
++import org.springframework.context.annotation.Bean;
++import org.springframework.context.annotation.Configuration;
++import org.springframework.core.annotation.Order;
++import org.springframework.security.config.Customizer;
++import org.springframework.security.config.annotation.web.builders.HttpSecurity;
++import org.springframework.security.core.userdetails.User;
++import org.springframework.security.core.userdetails.UserDetailsService;
++import org.springframework.security.crypto.password.NoOpPasswordEncoder;
++import org.springframework.security.crypto.password.PasswordEncoder;
++import org.springframework.security.provisioning.InMemoryUserDetailsManager;
++import org.springframework.security.web.SecurityFilterChain;
++
++@Configuration
++public class BasicOrNoAuthConfig {
++
++    @Bean
++    @ConditionalOnProperty(prefix = "auth", name = "enabled", havingValue = "true")
++    public UserDetailsService userDetailsService(
++            @Value("${auth.username:devuser}") String username,
++            @Value("${auth.password:devpassword}") String password) {
++
++        return new InMemoryUserDetailsManager(
++            User.withUsername(username)
++                .password(password)
++                .roles("USER")
++                .build());
++    }
++
++    @SuppressWarnings("deprecation")
++    @Bean
++    @ConditionalOnProperty(prefix = "auth", name = "enabled", havingValue = "true")
++    public PasswordEncoder passwordEncoder() {
++        // For dev/test only — plaintext password
++        return NoOpPasswordEncoder.getInstance();
++    }
++
++    @Bean
++    @ConditionalOnProperty(prefix = "auth", name = "enabled", havingValue = "true")
++    @Order(SecurityProperties.BASIC_AUTH_ORDER)
++    public SecurityFilterChain basicAuthChain(HttpSecurity http) throws Exception {
++        http
++            .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
++            .httpBasic(Customizer.withDefaults())
++            .csrf(csrf -> csrf.disable());
++        return http.build();
++    }
++
++    @Bean
++    @ConditionalOnProperty(prefix = "auth", name = "enabled", havingValue = "false", matchIfMissing = true)
++    @Order(SecurityProperties.BASIC_AUTH_ORDER)
++    public SecurityFilterChain permitAllChain(HttpSecurity http) throws Exception {
++        http
++            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
++            .csrf(csrf -> csrf.disable());
++        return http.build();
++    }
++}
