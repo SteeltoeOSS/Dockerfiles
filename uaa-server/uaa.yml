@@ -115,6 +115,7 @@
         secret: server_secret
       steeltoesamplesclient:
         app-launch-url: https://localhost:7072
+        authorities: uaa.resource
         authorized-grant-types: authorization_code, client_credentials
         autoapprove:
         - openid
