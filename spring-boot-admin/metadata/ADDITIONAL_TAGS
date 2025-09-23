@@ -1,1 +1,1 @@
--t spring-boot-admin:3.4 -t spring-boot-admin:3 -t spring-boot-admin:latest
+-t spring-boot-admin:3.5 -t spring-boot-admin:3 -t spring-boot-admin:latest

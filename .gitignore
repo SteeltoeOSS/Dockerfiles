@@ -10,3 +10,7 @@ build/
 
 # MacOS
 .DS_Store
+
+# native build artifacts
+*.zip
+*-temp/

@@ -2,22 +2,27 @@
 # Netflix Eureka Server Build
 # -----------------------------------------------------------------------------
 ARG JVM=21
+ARG BOOT_VERSION=3.5.6
+# When changing, make sure this aligns with metadata/IMAGE_VERSION
+ARG SERVER_VERSION=4.3.0
 
 FROM eclipse-temurin:$JVM-alpine AS build
 ARG JVM
+ARG BOOT_VERSION
+ARG SERVER_VERSION
 WORKDIR /scratch
 RUN apk update && apk add ca-certificates && apk add curl && apk add patch
 RUN curl --get https://start.spring.io/starter.zip \
-        -d type=gradle-project \
-        -d bootVersion=3.4.1 \
-        -d javaVersion=$JVM \
-        -d groupId=io.steeltoe.docker \
-        -d artifactId=eurekaserver \
-        -d applicationName=EurekaServer \
-        -d language=java \
-        -d dependencies=cloud-eureka-server,actuator \
-        -d version=4.2.0 \
-        --output eurekaserver.zip
+    -d type=gradle-project \
+    -d bootVersion=$BOOT_VERSION \
+    -d javaVersion=$JVM \
+    -d groupId=io.steeltoe.docker \
+    -d artifactId=eurekaserver \
+    -d applicationName=EurekaServer \
+    -d language=java \
+    -d dependencies=cloud-eureka-server,actuator \
+    -d version=$SERVER_VERSION \
+    --output eurekaserver.zip
 RUN mkdir eurekaserver && unzip -d eurekaserver eurekaserver.zip
 COPY metadata metadata
 COPY patches patches
@@ -34,7 +39,6 @@ RUN mkdir output && \
 # -----------------------------------------------------------------------------
 # Netflix Eureka Server Linux Image
 # -----------------------------------------------------------------------------
-
 FROM eclipse-temurin:$JVM-alpine
 WORKDIR /eureka-server
 COPY --from=build /scratch/output .
