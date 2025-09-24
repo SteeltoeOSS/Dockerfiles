@@ -126,6 +126,6 @@ else
     Write-Host "Tag value set by script parameter:" $Tag
 }
 
-$docker_command = "docker build $Tag $ImageDirectory"
+$docker_command = "docker build $Tag $ImageDirectory --build-arg SERVER_VERSION=$Version"
 Write-Host $docker_command
 Invoke-Expression $docker_command

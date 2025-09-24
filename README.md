@@ -27,7 +27,7 @@ See [Common Tasks](https://github.com/SteeltoeOSS/Samples/blob/main/CommonTasks.
 | [steeltoe.azurecr.io/config-server](config-server/) | Spring Cloud Config Server |
 | [steeltoe.azurecr.io/eureka-server](eureka-server/) | Netflix Eureka Server |
 | [steeltoe.azurecr.io/spring-boot-admin](spring-boot-admin/) | Spring Boot Admin |
-| [steeltoe.azurecr.io/uaa-server](uaa-server/) | CloudFoundry UAA Server |
+| [steeltoe.azurecr.io/uaa-server](uaa-server/) | Cloud Foundry UAA Server |
 
 ## Debug Image Building
 

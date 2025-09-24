@@ -3,8 +3,6 @@
 # -----------------------------------------------------------------------------
 ARG JVM=21
 ARG BOOT_VERSION=3.5.6
-# When changing, make sure this aligns with metadata/IMAGE_VERSION
-ARG SERVER_VERSION=4.3.0
 
 FROM eclipse-temurin:$JVM-alpine AS build
 ARG JVM
@@ -34,7 +32,7 @@ RUN for patch in patches/*.patch; do \
         done
 RUN eurekaserver/gradlew bootJar --project-dir eurekaserver --no-daemon
 RUN mkdir output && \
-    cp "eurekaserver/build/libs/eurekaserver-$(cat metadata/IMAGE_VERSION).jar" output/eurekaserver.jar
+    cp "eurekaserver/build/libs/eurekaserver-$SERVER_VERSION.jar" output/eurekaserver.jar
 
 # -----------------------------------------------------------------------------
 # Netflix Eureka Server Linux Image

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This script essentially does what ./build.ps1 + the dockerfiles do, but without building container images.
-# Use this script if you need to troubleshoot or do something new with the servers that get embedded in the images
+# Use this script if you need to troubleshoot or do something new with the servers that get embedded in the images.
 
 if [ "$#" -eq 0 ]
 then
@@ -9,30 +9,29 @@ then
     exit 1
 fi
 
-JVM="21"
-bootVersion="3.5.6"
-
 if [ "$1" == "config-server" ]; then
     appName="ConfigServer"
-    serverVersion="4.3.0"
     dependencies="cloud-config-server,actuator,cloud-eureka,security"
 elif [ "$1" == "eureka-server" ]; then
     appName="EurekaServer"
-    serverVersion="4.3.0"
     dependencies="cloud-eureka-server,actuator"
 elif [ "$1" == "spring-boot-admin" ]; then
     appName="SpringBootAdmin"
-    serverVersion="3.5.5"
     dependencies="codecentric-spring-boot-admin-server"
 else
     echo "$1 is not currently supported by this script"
     exit 2
 fi
+
 sourceDirectory=$1
 serverName=${sourceDirectory//-/}
 tempDir="$serverName-temp"
+JVM="21"
+bootVersion="3.5.6"
+serverVersion="$(cat $sourceDirectory/metadata/IMAGE_VERSION)"
 
-echo "Source: $sourceDirectory | Server: $serverName | TempDir: $tempDir"
+echo "From source: $sourceDirectory | Building server: $serverName@$serverVersion | In temp directory: $tempDir"
+
 rm -rf $tempDir
 mkdir $tempDir
 cd $tempDir
@@ -61,8 +60,8 @@ for patch in patches/*.patch; do \
         cd ..; \
         done
 
-$serverName/gradlew bootJar --project-dir $serverName
-mkdir output
-cp $serverName/build/libs/$serverName-$(cat metadata/IMAGE_VERSION).jar output/$serverName.jar
+cd $serverName
+./gradlew bootBuildImage --imageName="steeltoe.azurecr.io/$sourceDirectory:$serverVersion"
+cd ..
 
 cd ..

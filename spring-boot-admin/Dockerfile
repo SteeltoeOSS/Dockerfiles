@@ -3,8 +3,6 @@
 # -----------------------------------------------------------------------------
 ARG JVM=21
 ARG BOOT_VERSION=3.5.6
-# When changing, make sure this aligns with metadata/IMAGE_VERSION
-ARG SERVER_VERSION=3.5.5
 
 FROM eclipse-temurin:$JVM-alpine AS build
 ARG JVM
