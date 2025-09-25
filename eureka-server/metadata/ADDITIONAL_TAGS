@@ -1,1 +1,1 @@
--t eureka-server:4.3 -t eureka-server:4 -t eureka-server:latest
+eureka-server:4.3 eureka-server:4 eureka-server:latest

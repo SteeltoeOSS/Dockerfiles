@@ -76,7 +76,7 @@ $ImagesDirectory = Split-Path -Parent $PSCommandPath
 
 if ($List)
 {
-    Get-Childitem -Path $ImagesDirectory -Directory | Where-Object { !$_.Name.StartsWith(".") } | Select-Object Name
+    Get-ChildItem -Path $ImagesDirectory -Directory | Where-Object { !$_.Name.StartsWith(".") } | Select-Object Name
     return
 }
 
@@ -96,25 +96,19 @@ if (!(Get-Command "docker" -ErrorAction SilentlyContinue))
     throw "'docker' command not found"
 }
 
-$Dockerfile = Join-Path $ImageDirectory Dockerfile
-if (!(Test-Path $Dockerfile))
-{
-    throw "No Dockerfile for $Name (expected $Dockerfile)"
-}
-
 if (!$Tag)
 {
-    if (Test-Path "$ImageDirectory/metadata")
+    if (Test-Path (Join-Path $ImageDirectory "metadata"))
     {
-        $Tag = "-t $DockerOrg/$Name"
-        $Version = Get-Content "$ImageDirectory/metadata/IMAGE_VERSION"
+        $Tag = "$DockerOrg/$Name"
+        $Version = Get-Content (Join-Path $ImageDirectory "metadata" "IMAGE_VERSION")
         $Tag += ":$Version"
-        $Revision = Get-Content "$ImageDirectory/metadata/IMAGE_REVISION"
+        $Revision = Get-Content (Join-Path $ImageDirectory "metadata" "IMAGE_REVISION")
         if ($Revision)
         {
             $Tag += "-$Revision"
         }
-        $Tag += " $(Get-Content $ImageDirectory/metadata/ADDITIONAL_TAGS | ForEach-Object { $_.replace("$Name","$DockerOrg/$Name") })"
+        $AdditionalTags = "$(Get-Content (Join-Path $ImageDirectory "metadata" "ADDITIONAL_TAGS") | ForEach-Object { $_.replace("$Name","$DockerOrg/$Name") })"
     }
     else
     {
@@ -124,8 +118,117 @@ if (!$Tag)
 else
 {
     Write-Host "Tag value set by script parameter:" $Tag
+    $AdditionalTags = ""
 }
 
-$docker_command = "docker build $Tag $ImageDirectory --build-arg SERVER_VERSION=$Version"
-Write-Host $docker_command
-Invoke-Expression $docker_command
+if ($Name -eq "uaa-server")
+{
+    $Dockerfile = Join-Path $ImageDirectory Dockerfile
+    if (!(Test-Path $Dockerfile))
+    {
+        throw "No Dockerfile for $Name (expected $Dockerfile)"
+    }
+
+    $docker_command = "docker build -t $Tag $AdditionalTags $ImageDirectory --build-arg SERVER_VERSION=$Version"
+    Write-Host $docker_command
+    Invoke-Expression $docker_command
+}
+else
+{
+    if (!(Get-Command "patch" -ErrorAction SilentlyContinue))
+    {
+        if (Test-Path "C:\Program Files\Git\usr\bin\patch.exe")
+        {
+            Write-Host "'patch' command not found, but Git is installed; adding Git usr\bin to PATH"
+            $env:Path += ";C:\Program Files\Git\usr\bin"
+        }
+        else
+        {
+            throw "'patch' command not found"
+        }
+    }
+
+    switch ($Name)
+    {
+        "config-server"
+        {
+            $appName = "ConfigServer"
+            $dependencies = "cloud-config-server,actuator,cloud-eureka,security"
+        }
+        "eureka-server"
+        {
+            $appName = "EurekaServer"
+            $dependencies = "cloud-eureka-server,actuator"
+        }
+        "spring-boot-admin"
+        {
+            $appName = "SpringBootAdmin"
+            $dependencies = "codecentric-spring-boot-admin-server"
+        }
+        Default
+        {
+            Write-Host "$Name is not currently supported by this script"
+            exit 2
+        }
+    }
+    $serverName = $Name -replace '-', ''
+    $tempDir = "$Name-temp"
+    $JVM = "21"
+    $bootVersion = Get-Content (Join-path $ImageDirectory "metadata" "SPRING_BOOT_VERSION")
+    $serverVersion = Get-Content (Join-Path $ImageDirectory "metadata" "IMAGE_VERSION")
+
+    Write-Host "Building server: $serverName@$serverVersion on Spring Boot $bootVersion with primary tag: $Tag"
+    Write-Host "Using source files in: $ImageDirectory | Working directory:" (Join-Path $PWD $tempDir)
+
+    # Ensure clean setup
+    Remove-Item -Recurse -Force $tempDir -ErrorAction Ignore
+    New-Item -ItemType Directory -Path $tempDir | Out-Null
+    Set-Location $tempDir
+
+    Invoke-WebRequest `
+        -Uri "https://start.spring.io/starter.zip" `
+        -Method Post `
+        -Body @{
+            type            = "gradle-project"
+            bootVersion     = $bootVersion
+            javaVersion     = $JVM
+            groupId         = "io.steeltoe.docker"
+            artifactId      = $serverName
+            applicationName = $appName
+            language        = "java"
+            dependencies    = $dependencies
+            version         = $serverVersion
+        } `
+        -OutFile "$serverName.zip"
+
+    New-Item -ItemType Directory -Path $serverName | Out-Null
+    Expand-Archive -Path "$serverName.zip" -DestinationPath $serverName -Force
+
+    # Apply patches
+    foreach ($patch in Get-ChildItem -Path (Join-Path $ImageDirectory patches) -Filter "*.patch")
+    {
+        Write-Host "applying patch $($patch.Name)"
+        Push-Location $serverName
+        Get-Content $patch | & patch -p1
+        Pop-Location
+    }
+
+    # Build the image
+    Push-Location $serverName
+    $gradleArgs = @("bootBuildImage", "--imageName=$Tag")
+
+    if ($env:GITHUB_ACTIONS -eq "true") {
+        $gradleArgs += "--no-daemon"
+    }
+
+    ./gradlew @gradleArgs
+    Pop-Location
+
+    foreach ($AdditionalTag in $AdditionalTags.Split(" ", [System.StringSplitOptions]::RemoveEmptyEntries))
+    {
+        Write-Host "running 'docker tag $Tag $AdditionalTag'"
+        docker tag $Tag $AdditionalTag
+    }
+
+    Set-Location ..
+}
