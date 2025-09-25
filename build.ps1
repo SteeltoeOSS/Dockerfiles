@@ -96,24 +96,24 @@ if (!(Get-Command "docker" -ErrorAction SilentlyContinue))
     throw "'docker' command not found"
 }
 
+if (Test-Path (Join-Path $ImageDirectory "metadata"))
+{
+    $Version = Get-Content (Join-Path $ImageDirectory "metadata" "IMAGE_VERSION")
+}
+else
+{
+    throw "No metadata found for $Name"
+}
+
 if (!$Tag)
 {
-    if (Test-Path (Join-Path $ImageDirectory "metadata"))
+    $Tag = "$DockerOrg/${Name}:$Version"
+    $Revision = Get-Content (Join-Path $ImageDirectory "metadata" "IMAGE_REVISION")
+    if ($Revision)
     {
-        $Tag = "$DockerOrg/$Name"
-        $Version = Get-Content (Join-Path $ImageDirectory "metadata" "IMAGE_VERSION")
-        $Tag += ":$Version"
-        $Revision = Get-Content (Join-Path $ImageDirectory "metadata" "IMAGE_REVISION")
-        if ($Revision)
-        {
-            $Tag += "-$Revision"
-        }
-        $AdditionalTags = "$(Get-Content (Join-Path $ImageDirectory "metadata" "ADDITIONAL_TAGS") | ForEach-Object { $_.replace("$Name","$DockerOrg/$Name") })"
+        $Tag += "-$Revision"
     }
-    else
-    {
-        throw "No metadata found for $Name"
-    }
+    $AdditionalTags = "$(Get-Content (Join-Path $ImageDirectory "metadata" "ADDITIONAL_TAGS") | ForEach-Object { $_.replace("$Name","$DockerOrg/$Name") })"
 }
 else
 {
