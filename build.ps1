@@ -137,10 +137,10 @@ else
 {
     if (!(Get-Command "patch" -ErrorAction SilentlyContinue))
     {
-        if (Test-Path "C:\Program Files\Git\usr\bin\patch.exe")
+        if (Test-Path "$Env:ProgramFiles\Git\usr\bin\patch.exe")
         {
             Write-Host "'patch' command not found, but Git is installed; adding Git usr\bin to PATH"
-            $env:Path += ";C:\Program Files\Git\usr\bin"
+            $env:Path += ";$Env:ProgramFiles\Git\usr\bin"
         }
         else
         {
