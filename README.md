@@ -4,6 +4,35 @@ GitHub repo for server images to use for local development with SteeltoeOSS.
 
 ## Building
 
+### Pre-Requisites
+
+The following tools are required to build any image in this repository:
+
+1. PowerShell or pwsh
+1. Docker or Podman
+
+#### Config Server, Eureka and Spring Boot Admin
+
+The process for these images is to download starter projects from start.spring.io, apply patches to those files and produce images using [the Gradle Plugin](https://docs.spring.io/spring-boot/gradle-plugin/packaging-oci-image.html).
+To build these images you must also have:
+
+1. Access to start.spring.io
+1. `patch` available in the path or installed with Git for Windows
+1. JDK 21
+
+If you do not already have a JDK installed, consider using [Scoop](https://scoop.sh/):
+
+```shell
+# Permit executing remote-signed scripts
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+# Install Scoop
+Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
+# Add the Java bucket
+scoop bucket add java
+# Install the JDK
+scoop install java/openjdk21
+```
+
 ### Build a specific image
 
 ```shell
