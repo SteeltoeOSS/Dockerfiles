@@ -76,7 +76,7 @@ $ImagesDirectory = Split-Path -Parent $PSCommandPath
 
 if ($List)
 {
-    Get-ChildItem -Path $ImagesDirectory -Directory | Where-Object { !$_.Name.StartsWith(".") } | Select-Object Name
+    Get-ChildItem -Path $ImagesDirectory -Directory | Where-Object { !$_.Name.StartsWith(".") -And !$_.Name.EndsWith("-temp") } | Select-Object Name
     return
 }
 
@@ -163,7 +163,7 @@ else
         "spring-boot-admin"
         {
             $appName = "SpringBootAdmin"
-            $dependencies = "codecentric-spring-boot-admin-server"
+            $dependencies = "codecentric-spring-boot-admin-server,native"
         }
         Default
         {
@@ -194,7 +194,9 @@ else
             javaVersion     = $JVM
             groupId         = "io.steeltoe.docker"
             artifactId      = $serverName
+            name            = $appName
             applicationName = $appName
+            description     = "$appName for local development with Steeltoe"
             language        = "java"
             dependencies    = $dependencies
             version         = $serverVersion

@@ -1,0 +1,13 @@
+--- ./build.gradle	2025-09-30 14:48:20.000000000 -0500
++++ ./build.gradle	2025-09-30 14:49:16.584226000 -0500
+@@ -41,3 +41,10 @@
+ tasks.named('test') {
+        useJUnitPlatform()
+ }
++
++bootBuildImage {
++    createdDate = "now"
++    environment = [
++       "BP_SPRING_CLOUD_BINDINGS_DISABLED": "true"
++    ]
++}
