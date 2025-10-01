@@ -76,7 +76,7 @@ $ImagesDirectory = Split-Path -Parent $PSCommandPath
 
 if ($List)
 {
-    Get-ChildItem -Path $ImagesDirectory -Directory | Where-Object { !$_.Name.StartsWith(".") -And !$_.Name.EndsWith("-temp") } | Select-Object Name
+    Get-ChildItem -Path $ImagesDirectory -Directory | Where-Object { !$_.Name.StartsWith(".") -And $_.Name -NE "workspace" } | Select-Object Name
     return
 }
 
@@ -107,13 +107,23 @@ else
 
 if (!$Tag)
 {
-    $Tag = "$DockerOrg/${Name}:$Version"
-    $Revision = Get-Content (Join-Path $ImageDirectory "metadata" "IMAGE_REVISION")
-    if ($Revision)
+    if ($env:GITHUB_ACTIONS -eq "true")
     {
-        $Tag += "-$Revision"
+        $Tag = "$DockerOrg/${Name}:$Version"
+        $Revision = Get-Content (Join-Path $ImageDirectory "metadata" "IMAGE_REVISION")
+        if ($Revision)
+        {
+            $Tag += "-$Revision"
+        }
+        $AdditionalTags = "$(Get-Content (Join-Path $ImageDirectory "metadata" "ADDITIONAL_TAGS") | ForEach-Object { $_.replace("$Name","$DockerOrg/$Name") })"
+        Write-Host "If pushed, the image will be available as: $Tag $AdditionalTags"
     }
-    $AdditionalTags = "$(Get-Content (Join-Path $ImageDirectory "metadata" "ADDITIONAL_TAGS") | ForEach-Object { $_.replace("$Name","$DockerOrg/$Name") })"
+    else
+    {
+        $Tag = "$DockerOrg/${Name}:dev"
+        $AdditionalTags = ""
+        Write-Host "The image will be locally runnable as:" $Tag
+    }
 }
 else
 {
@@ -171,19 +181,24 @@ else
             exit 2
         }
     }
+
+    $workPath = "workspace"
+    if (!(Test-Path $workPath))
+    {
+        New-Item -ItemType Directory -Path $workPath | Out-Null
+    }
+    Set-Location $workPath
+
     $serverName = $Name -replace '-', ''
-    $tempDir = "$Name-temp"
     $JVM = "21"
     $bootVersion = Get-Content (Join-path $ImageDirectory "metadata" "SPRING_BOOT_VERSION")
     $serverVersion = Get-Content (Join-Path $ImageDirectory "metadata" "IMAGE_VERSION")
 
-    Write-Host "Building server: $serverName@$serverVersion on Spring Boot $bootVersion with primary tag: $Tag"
-    Write-Host "Using source files in: $ImageDirectory | Working directory:" (Join-Path $PWD $tempDir)
+    Write-Host "Building server: $Name@$serverVersion on Spring Boot $bootVersion with primary tag: $Tag"
+    Write-Host "Using source files in: $ImageDirectory | Working directory:" $PWD
 
     # Ensure clean setup
-    Remove-Item -Recurse -Force $tempDir -ErrorAction Ignore
-    New-Item -ItemType Directory -Path $tempDir | Out-Null
-    Set-Location $tempDir
+    Remove-Item -Recurse -Force $serverName -ErrorAction Ignore
 
     Invoke-WebRequest `
         -Uri "https://start.spring.io/starter.zip" `
@@ -205,6 +220,7 @@ else
 
     New-Item -ItemType Directory -Path $serverName | Out-Null
     Expand-Archive -Path "$serverName.zip" -DestinationPath $serverName -Force
+    Remove-Item "$serverName.zip"
 
     # Apply patches
     foreach ($patch in Get-ChildItem -Path (Join-Path $ImageDirectory patches) -Filter "*.patch")

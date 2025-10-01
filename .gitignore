@@ -12,5 +12,4 @@ build/
 .DS_Store
 
 # native build artifacts
-*.zip
-*-temp/
+workspace/
