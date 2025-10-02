@@ -93,7 +93,15 @@ if (!(Test-Path $ImageDirectory))
 
 if (!(Get-Command "docker" -ErrorAction SilentlyContinue))
 {
-    throw "'docker' command not found"
+    if (Get-Command "podman" -ErrorAction SilentlyContinue)
+    {
+        Write-Host "Adding docker alias for podman"
+        Set-Alias "docker" "podman"
+    }
+    else
+    {
+        throw "'docker' command not found"
+    }
 }
 
 if (Test-Path (Join-Path $ImageDirectory "metadata"))
@@ -122,12 +130,12 @@ if (!$Tag)
     {
         $Tag = "$DockerOrg/${Name}:dev"
         $AdditionalTags = ""
-        Write-Host "The image will be locally runnable as:" $Tag
+        Write-Host "The image will be locally runnable as: $Tag"
     }
 }
 else
 {
-    Write-Host "Tag value set by script parameter:" $Tag
+    Write-Host "Tag value set by script parameter: $Tag"
     $AdditionalTags = ""
 }
 
@@ -182,12 +190,13 @@ else
         }
     }
 
+    $AllowCachedDownload = $true
     $workPath = "workspace"
     if (!(Test-Path $workPath))
     {
         New-Item -ItemType Directory -Path $workPath | Out-Null
     }
-    Set-Location $workPath
+    Push-Location $workPath
 
     $serverName = $Name -replace '-', ''
     $JVM = "21"
@@ -197,30 +206,40 @@ else
     Write-Host "Building server: $Name@$serverVersion on Spring Boot $bootVersion with primary tag: $Tag"
     Write-Host "Using source files in: $ImageDirectory | Working directory:" $PWD
 
-    # Ensure clean setup
+    # Ensure clean workspace
     Remove-Item -Recurse -Force $serverName -ErrorAction Ignore
 
-    Invoke-WebRequest `
-        -Uri "https://start.spring.io/starter.zip" `
-        -Method Post `
-        -Body @{
-            type            = "gradle-project"
-            bootVersion     = $bootVersion
-            javaVersion     = $JVM
-            groupId         = "io.steeltoe.docker"
-            artifactId      = $serverName
-            name            = $appName
-            applicationName = $appName
-            description     = "$appName for local development with Steeltoe"
-            language        = "java"
-            dependencies    = $dependencies
-            version         = $serverVersion
-        } `
-        -OutFile "$serverName.zip"
+    if (!$AllowCachedDownload -Or !(Test-Path "$serverName.zip"))
+    {
+        Invoke-WebRequest `
+            -Uri "https://start.spring.io/starter.zip" `
+            -Method Post `
+            -Body @{
+                type            = "gradle-project"
+                bootVersion     = $bootVersion
+                javaVersion     = $JVM
+                groupId         = "io.steeltoe.docker"
+                artifactId      = $serverName
+                name            = $appName
+                applicationName = $appName
+                description     = "$appName for local development with Steeltoe"
+                language        = "java"
+                dependencies    = $dependencies
+                version         = $serverVersion
+            } `
+            -OutFile "$serverName.zip"
+            }
+    else
+    {
+        Write-Host "Using cached Spring Boot project download"
+    }
 
-    New-Item -ItemType Directory -Path $serverName | Out-Null
-    Expand-Archive -Path "$serverName.zip" -DestinationPath $serverName -Force
-    Remove-Item "$serverName.zip"
+            New-Item -ItemType Directory -Path $serverName | Out-Null
+            Expand-Archive -Path "$serverName.zip" -DestinationPath $serverName -Force
+
+            if (!$AllowCachedDownload) {
+        Remove-Item "$serverName.zip"
+    }
 
     # Apply patches
     foreach ($patch in Get-ChildItem -Path (Join-Path $ImageDirectory patches) -Filter "*.patch")
@@ -228,6 +247,11 @@ else
         Write-Host "applying patch $($patch.Name)"
         Push-Location $serverName
         Get-Content $patch | & patch -p1
+        if ($LASTEXITCODE -ne 0)
+        {
+            Write-Error "Patch failed with exit code $LASTEXITCODE"
+            exit 1
+        }
         Pop-Location
     }
 
@@ -248,5 +272,5 @@ else
         docker tag $Tag $AdditionalTag
     }
 
-    Set-Location ..
+    Pop-Location
 }
