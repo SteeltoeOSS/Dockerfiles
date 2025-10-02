@@ -39,7 +39,7 @@ jobs:
       run: ./build.ps1 -Name '${{ env.IMAGE_NAME }}' -Registry '${{ env.REGISTRY }}' -Tag '${{ env.TAG }}'
       shell: pwsh
       env:
-        TAG: ${{ github.event_name == 'pull_request' && format('{0}/{1}:pr-{2}', env.REGISTRY, env.IMAGE_NAME, github.event.number) || '' }}
+        TAG: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || '' }}
 
     - name: Login to container registry
       uses: docker/login-action@v3

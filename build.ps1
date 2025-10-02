@@ -110,24 +110,24 @@ try {
 
     if (!$Tag) {
         if ($env:GITHUB_ACTIONS -eq "true") {
-            $Tag = "$DockerOrg/${Name}:$Version"
+            $ImageNameWithTag = "$DockerOrg/${Name}:$Version"
             $Revision = Get-Content (Join-Path $ImageDirectory "metadata" "IMAGE_REVISION")
             if ($Revision) {
-                $Tag += "-$Revision"
+                $ImageNameWithTag += "-$Revision"
             }
             $AdditionalTags = "$(Get-Content (Join-Path $ImageDirectory "metadata" "ADDITIONAL_TAGS") | ForEach-Object { $_.replace("$Name","$DockerOrg/$Name") })"
-            Write-Host "If pushed, the image will be available as: $Tag $AdditionalTags"
         }
         else {
-            $Tag = "$DockerOrg/${Name}:dev"
+            $ImageNameWithTag = "$DockerOrg/${Name}:dev"
             $AdditionalTags = ""
-            Write-Host "The image will be locally runnable as: $Tag"
         }
     }
     else {
-        Write-Host "Tag value set by script parameter: $Tag"
+        $ImageNameWithTag = "$DockerOrg/${Name}:$Tag"
         $AdditionalTags = ""
     }
+
+    Write-Host "This image will be available as: $ImageNameWithTag $AdditionalTags"
 
     if ($Name -eq "uaa-server") {
         $Dockerfile = Join-Path $ImageDirectory Dockerfile
@@ -135,7 +135,7 @@ try {
             throw "No Dockerfile for $Name (expected $Dockerfile)"
         }
 
-        $docker_command = "docker build -t $Tag $AdditionalTags $ImageDirectory --build-arg SERVER_VERSION=$Version"
+        $docker_command = "docker build -t $ImageNameWithTag $AdditionalTags $ImageDirectory --build-arg SERVER_VERSION=$Version"
         Write-Host $docker_command
         Invoke-Expression $docker_command
     }
@@ -181,8 +181,9 @@ try {
             $bootVersion = Get-Content (Join-path $ImageDirectory "metadata" "SPRING_BOOT_VERSION")
             $serverVersion = Get-Content (Join-Path $ImageDirectory "metadata" "IMAGE_VERSION")
 
-            Write-Host "Building server: $Name@$serverVersion on Spring Boot $bootVersion with primary tag: $Tag"
-            Write-Host "Using source files in: $ImageDirectory | Working directory:" $PWD
+            Write-Host "Building server: $Name@$serverVersion on Spring Boot $bootVersion"
+            Write-Host "Source files: $ImageDirectory"
+            Write-Host "Working directory: $PWD"
 
             # Ensure clean workspace
             Remove-Item -Recurse -Force $serverName -ErrorAction Ignore
@@ -235,7 +236,7 @@ try {
             # Build the image
             Push-Location $serverName
             try {
-                $gradleArgs = @("bootBuildImage", "--imageName=$Tag")
+                $gradleArgs = @("bootBuildImage", "--imageName=$ImageNameWithTag")
                 if ($env:GITHUB_ACTIONS -eq "true") {
                     $gradleArgs += "--no-daemon"
                 }
@@ -247,8 +248,8 @@ try {
             }
 
             foreach ($AdditionalTag in $AdditionalTags.Split(" ", [System.StringSplitOptions]::RemoveEmptyEntries)) {
-                Write-Host "running 'docker tag $Tag $AdditionalTag'"
-                docker tag $Tag $AdditionalTag
+                Write-Host "running 'docker tag $ImageNameWithTag $AdditionalTag'"
+                docker tag $ImageNameWithTag $AdditionalTag
             }
         }
         finally {
