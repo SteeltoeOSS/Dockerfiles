@@ -1,5 +1,7 @@
-# IntelliJ
+# IDEs
 .idea/
+.vscode/
+.vs/
 
 # Vi/Vim
 *.swp
@@ -11,5 +13,5 @@ build/
 # MacOS
 .DS_Store
 
-# native build artifacts
+# Staging directory
 workspace/

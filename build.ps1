@@ -26,6 +26,9 @@
     .PARAMETER List
     List available images.
 
+    .PARAMETER DisableCache
+    Disable caching of projects from start.spring.io.
+
     .PARAMETER Name
     Docker image name.
 
@@ -43,15 +46,13 @@
 param (
     [Switch] $Help,
     [Switch] $List,
+    [Switch] $DisableCache,
     [String] $Name,
     [String] $Tag,
     [String] $Registry
 )
 
 $ErrorActionPreference = 'Stop'
-
-# Capture the original location so we can return later
-$OriginalLocation = Get-Location
 
 try {
 
@@ -135,7 +136,15 @@ try {
             throw "No Dockerfile for $Name (expected $Dockerfile)"
         }
 
-        $docker_command = "docker build -t $ImageNameWithTag $AdditionalTags $ImageDirectory --build-arg SERVER_VERSION=$Version"
+        if ($DisableCache) {
+            Write-Host "Disabling Docker build cache"
+            $NoCacheArg = "--no-cache"
+        }
+        else {
+            $NoCacheArg = ""
+        }
+
+        $docker_command = "docker build $NoCacheArg -t $ImageNameWithTag $AdditionalTags $ImageDirectory --build-arg SERVER_VERSION=$Version"
         Write-Host $docker_command
         Invoke-Expression $docker_command
     }
@@ -169,7 +178,6 @@ try {
             }
         }
 
-        $AllowCachedDownload = $true
         $workPath = "workspace"
         if (!(Test-Path $workPath)) {
             New-Item -ItemType Directory -Path $workPath | Out-Null
@@ -180,6 +188,7 @@ try {
             $JVM = "21"
             $bootVersion = Get-Content (Join-path $ImageDirectory "metadata" "SPRING_BOOT_VERSION")
             $serverVersion = Get-Content (Join-Path $ImageDirectory "metadata" "IMAGE_VERSION")
+            $artifactName = "$serverName$serverVersion-boot$bootVersion-jvm$JVM.zip"
 
             Write-Host "Building server: $Name@$serverVersion on Spring Boot $bootVersion"
             Write-Host "Source files: $ImageDirectory"
@@ -187,8 +196,18 @@ try {
 
             # Ensure clean workspace
             Remove-Item -Recurse -Force $serverName -ErrorAction Ignore
+            if (Test-Path $serverName) {
+                throw "Failed to remove existing workspace $serverName"
+            }
 
-            if (!$AllowCachedDownload -Or !(Test-Path "$serverName.zip")) {
+            if ($DisableCache -And (Test-Path "$artifactName")) {
+                Write-Host "Removing previously downloaded $artifactName"
+                Remove-Item -Force "$artifactName"
+            }
+
+            # Scaffold project on start.spring.io
+            if (!(Test-Path "$artifactName")) {
+                Write-Host "Using start.spring.io to create project"
                 Invoke-WebRequest `
                     -Uri "https://start.spring.io/starter.zip" `
                     -Method Post `
@@ -205,37 +224,27 @@ try {
                         dependencies    = $dependencies
                         version         = $serverVersion
                     } `
-                    -OutFile "$serverName.zip"
+                    -OutFile $artifactName
             }
             else {
-                Write-Host "Using cached Spring Boot project download"
+                Write-Host "Using cached download from start.spring.io ($artifactName)"
             }
 
             New-Item -ItemType Directory -Path $serverName | Out-Null
-            Expand-Archive -Path "$serverName.zip" -DestinationPath $serverName -Force
+            Expand-Archive -Path $artifactName -DestinationPath $serverName -Force
 
-            if (!$AllowCachedDownload) {
-                Remove-Item "$serverName.zip"
-            }
-
-            # Apply patches
-            foreach ($patch in Get-ChildItem -Path (Join-Path $ImageDirectory patches) -Filter "*.patch") {
-                Write-Host "applying patch $($patch.Name)"
-                Push-Location $serverName
-                try {
+            Push-Location $serverName
+            try {
+                # Apply patches
+                foreach ($patch in Get-ChildItem -Path (Join-Path $ImageDirectory patches) -Filter "*.patch") {
+                    Write-Host "Applying patch $($patch.Name)"
                     Get-Content $patch | & patch -p1
                     if ($LASTEXITCODE -ne 0) {
                         throw "Patch failed with exit code $LASTEXITCODE"
                     }
                 }
-                finally {
-                    Pop-Location
-                }
-            }
 
-            # Build the image
-            Push-Location $serverName
-            try {
+                # Build the image
                 $gradleArgs = @("bootBuildImage", "--imageName=$ImageNameWithTag")
                 if ($env:GITHUB_ACTIONS -eq "true") {
                     $gradleArgs += "--no-daemon"
@@ -248,7 +257,7 @@ try {
             }
 
             foreach ($AdditionalTag in $AdditionalTags.Split(" ", [System.StringSplitOptions]::RemoveEmptyEntries)) {
-                Write-Host "running 'docker tag $ImageNameWithTag $AdditionalTag'"
+                Write-Host "Running 'docker tag $ImageNameWithTag $AdditionalTag'"
                 docker tag $ImageNameWithTag $AdditionalTag
             }
         }
@@ -261,7 +270,4 @@ catch {
     Write-Error "Build failed: $_"
     exit 1
 }
-finally {
-    # Always return to where we started
-    Set-Location $OriginalLocation
-}
+
