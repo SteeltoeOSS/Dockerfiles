@@ -1,1 +1,1 @@
--t config-server:4.3 -t config-server:4 -t config-server:latest
+config-server:4.3 config-server:4 config-server:latest
