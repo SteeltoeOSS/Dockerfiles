@@ -5,5 +5,5 @@ Image for SteeltoeOSS local development with <https://github.com/codecentric/spr
 ## Running
 
 ```shell
-docker run --publish 9099:9099 steeltoe.azurecr.io/spring-boot-admin
+docker run --publish 9099:9099 steeltoe.azurecr.io/spring-boot-admin:3
 ```

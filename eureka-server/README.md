@@ -5,7 +5,7 @@ Image for SteeltoeOSS local development with [Spring Cloud Eureka Server](https:
 ## Running
 
 ```shell
-docker run --rm -it --pull=always -p 8761:8761 --name steeltoe-eureka steeltoe.azurecr.io/eureka-server
+docker run --rm -it --pull=always -p 8761:8761 --name steeltoe-eureka steeltoe.azurecr.io/eureka-server:4
 ```
 
 ## Resources
