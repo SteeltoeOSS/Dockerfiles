@@ -207,7 +207,7 @@ try {
 
             # Scaffold project on start.spring.io
             if (!(Test-Path "$artifactName")) {
-                Write-Host "Using start.spring.io to create project"
+                Write-Host "Using start.spring.io to create project with dependencies: $dependencies"
                 Invoke-WebRequest `
                     -Uri "https://start.spring.io/starter.zip" `
                     -Method Post `
@@ -238,9 +238,39 @@ try {
                 # Apply patches
                 foreach ($patch in Get-ChildItem -Path (Join-Path $ImageDirectory patches) -Filter "*.patch") {
                     Write-Host "Applying patch $($patch.Name)"
-                    Get-Content $patch | & patch -p1
-                    if ($LASTEXITCODE -ne 0) {
-                        throw "Patch failed with exit code $LASTEXITCODE"
+                    $patchContent = Get-Content $patch -Raw
+                    $patchContent | & patch -p1
+                    $exitCode = $LASTEXITCODE
+                    if ($exitCode -ne 0) {
+                        # Check if this is a "new file" patch (old file is /dev/null)
+                        # New file patches may return non-zero exit codes but still succeed
+                        $isNewFilePatch = $patchContent -match '(?m)^--- /dev/null'
+                        if ($isNewFilePatch) {
+                            # Verify the file was actually created by checking if target exists
+                            # Extract the target file path from the +++ line (first one after --- /dev/null)
+                            $targetFile = $null
+                            if ($patchContent -match '(?m)^--- /dev/null\s+.*\r?\n\+\+\+ ([^\t]+)') {
+                                $targetFile = $matches[1] -replace '^\./', ''
+                                # Remove any trailing whitespace or timestamp
+                                $targetFile = $targetFile.Trim()
+                                if ($targetFile -and (Test-Path $targetFile)) {
+                                    Write-Host "Patch $($patch.Name) created new file successfully: $targetFile"
+                                } else {
+                                    Write-Host "Warning: Patch $($patch.Name) appears to be a new file patch but target not found: $targetFile"
+                                    throw "Patch $($patch.Name) failed with exit code $exitCode"
+                                }
+                            } else {
+                                Write-Host "Warning: Patch $($patch.Name) appears to be a new file patch but could not determine target file path"
+                                throw "Patch $($patch.Name) failed with exit code $exitCode"
+                            }
+                        } else {
+                            Write-Host "Error: Patch $($patch.Name) failed with exit code $exitCode"
+                            Write-Host "Patch content preview:"
+                            Get-Content $patch | Select-Object -First 10 | ForEach-Object { Write-Host "  $_" }
+                            throw "Patch $($patch.Name) failed with exit code $exitCode"
+                        }
+                    } else {
+                        Write-Host "Patch $($patch.Name) applied successfully"
                     }
                 }
 
