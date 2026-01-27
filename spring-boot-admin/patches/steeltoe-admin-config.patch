@@ -1,4 +1,4 @@
---- /dev/null	2025-01-01 00:00:00.000000000 +0000
+--- /dev/null
 +++ ./src/main/java/io/steeltoe/docker/springbootadmin/SteeltoeAdminConfiguration.java	2026-01-27 00:00:00.000000000 +0000
 @@ -0,0 +1,126 @@
 +package io.steeltoe.docker.springbootadmin;
@@ -28,11 +28,11 @@
 +
 +/**
 + * Configuration to make Spring Boot Admin compatible with Steeltoe actuator responses.
-+ * 
++ *
 + * Steeltoe adds a "type":"Steeltoe" property to its actuator index response, which causes
 + * deserialization failures in AOT-compiled Spring Boot Admin. This configuration provides
 + * a custom WebClient with a manual deserializer that only extracts the _links field.
-+ * 
++ *
 + * @see <a href="https://www.graalvm.org/22.3/reference-manual/native-image/metadata/">GraalVM Reflection Metadata</a>
 + */
 +@Configuration(proxyBeanMethods = false)

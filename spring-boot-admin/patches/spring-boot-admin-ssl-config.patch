@@ -1,5 +1,5 @@
---- /dev/null	2025-01-01 00:00:00.000000000 +0000
-+++ ./src/main/java/io/steeltoe/docker/ssl/SpringBootAdminSslConfiguration.java	2025-12-08 00:00:00.000000000 +0000
+--- /dev/null
++++ ./src/main/java/io/steeltoe/docker/ssl/SpringBootAdminSslConfiguration.java	2026-01-27 00:00:00.000000000 +0000
 @@ -0,0 +1,79 @@
 +package io.steeltoe.docker.ssl;
 +
