@@ -274,6 +274,28 @@ try {
                     }
                 }
 
+                # Copy shared SSL configuration files
+                # Get repository root (parent of workspace directory)
+                # We're currently in workspace/$serverName, so go up two levels to get to repo root
+                $currentDir = (Get-Location).Path
+                $workspaceDir = Split-Path -Parent $currentDir
+                $repoRoot = Split-Path -Parent $workspaceDir
+                $sharedSslDir = Join-Path $repoRoot "shared" "ssl-config"
+                if (Test-Path $sharedSslDir) {
+                    $sharedJavaDir = Join-Path "src" "main" "java" "io" "steeltoe" "docker" "ssl"
+                    if (!(Test-Path $sharedJavaDir)) {
+                        New-Item -ItemType Directory -Path $sharedJavaDir -Force | Out-Null
+                    }
+
+                    # Copy SslTrustConfiguration.java (used by all services)
+                    $sslTrustConfig = Join-Path $sharedSslDir "SslTrustConfiguration.java"
+                    if (Test-Path $sslTrustConfig) {
+                        $targetFile = Join-Path $sharedJavaDir "SslTrustConfiguration.java"
+                        Write-Host "Copying shared SSL trust configuration"
+                        Copy-Item $sslTrustConfig $targetFile -Force
+                    }
+                }
+
                 # Build the image
                 $gradleArgs = @("bootBuildImage", "--imageName=$ImageNameWithTag")
                 if ($env:GITHUB_ACTIONS -eq "true") {
