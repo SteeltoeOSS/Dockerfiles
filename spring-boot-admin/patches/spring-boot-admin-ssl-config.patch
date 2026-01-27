@@ -1,0 +1,82 @@
+--- /dev/null
++++ ./src/main/java/io/steeltoe/docker/ssl/SpringBootAdminSslConfiguration.java	2026-01-27 00:00:00.000000000 +0000
+@@ -0,0 +1,79 @@
++package io.steeltoe.docker.ssl;
++
++import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
++import org.springframework.beans.factory.ObjectProvider;
++import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
++import org.springframework.context.annotation.Bean;
++import org.springframework.context.annotation.Configuration;
++import org.springframework.http.client.reactive.ClientHttpConnector;
++import org.springframework.http.client.reactive.ReactorClientHttpConnector;
++import io.netty.handler.ssl.SslContext;
++import reactor.netty.http.client.HttpClient;
++import reactor.netty.tcp.SslProvider;
++import reactor.netty.tcp.TcpSslContextSpec;
++
++import javax.net.ssl.X509TrustManager;
++
++/**
++ * Spring Boot Admin SSL Configuration
++ *
++ * Configures Spring Boot Admin's WebClient to use the shared SSL trust manager
++ * for trusting development certificates (e.g., Aspire development certificates).
++ *
++ * Uses ObjectProvider for AOT compatibility - the trust manager is resolved at runtime
++ * when the bean method is called, not at configuration class construction time.
++ */
++@Configuration
++public class SpringBootAdminSslConfiguration {
++
++    private static final Logger logger = LoggerFactory.getLogger(SpringBootAdminSslConfiguration.class);
++    private final ObjectProvider<X509TrustManager> trustManagerProvider;
++
++    public SpringBootAdminSslConfiguration(ObjectProvider<X509TrustManager> trustManagerProvider) {
++        this.trustManagerProvider = trustManagerProvider;
++    }
++
++    /**
++     * Provides a ClientHttpConnector with custom SSL trust for Spring Boot Admin's WebClient.
++     *
++     * Uses ObjectProvider to defer trust manager resolution until runtime, making this
++     * AOT-compatible. The trust manager is resolved when this bean method is called,
++     * not during AOT processing at build time.
++     */
++    @Bean
++    @ConditionalOnMissingBean(ClientHttpConnector.class)
++    public ClientHttpConnector clientHttpConnector() {
++        logger.info("Configuring Spring Boot Admin WebClient with SSL trust support");
++        X509TrustManager trustManager = trustManagerProvider.getIfAvailable();
++
++        if (trustManager == null) {
++            logger.debug("No custom X509TrustManager available, using default SSL configuration");
++            return new ReactorClientHttpConnector(HttpClient.create());
++        }
++
++        try {
++            logger.info("Using custom X509TrustManager for Spring Boot Admin WebClient");
++            // Build SslContext first to avoid deprecated sslContext(ProtocolSslContextSpec) method
++            SslContext sslContext = TcpSslContextSpec.forClient()
++                    .configure(sslContextBuilder -> {
++                        sslContextBuilder.trustManager(trustManager);
++                    })
++                    .sslContext();
++
++            SslProvider sslProvider = SslProvider.builder()
++                    .sslContext(sslContext)
++                    .build();
++
++            HttpClient httpClient = HttpClient.create()
++                    .secure(sslProvider);
++
++            logger.debug("Configured Spring Boot Admin WebClient with custom SSL trust");
++            return new ReactorClientHttpConnector(httpClient);
++        } catch (Exception e) {
++            logger.error("Failed to configure SSL trust for Spring Boot Admin WebClient, using default", e);
++            // Fall back to default connector if SSL configuration fails
++            return new ReactorClientHttpConnector(HttpClient.create());
++        }
++    }
++}

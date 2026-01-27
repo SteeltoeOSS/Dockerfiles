@@ -1,13 +1,22 @@
 --- ./src/main/java/io/steeltoe/docker/springbootadmin/SpringBootAdmin.java	2024-09-20 12:49:35.099908129 -0500
-+++ ./src/main/java/io/steeltoe/docker/springbootadmin/SpringBootAdmin.java	2024-09-20 12:49:59.410273961 -0500
-@@ -2,8 +2,10 @@
++++ ./src/main/java/io/steeltoe/docker/springbootadmin/SpringBootAdmin.java	2026-01-27 00:00:00.000000000 -0500
+@@ -1,13 +1,18 @@
+ package io.steeltoe.docker.springbootadmin;
 
  import org.springframework.boot.SpringApplication;
  import org.springframework.boot.autoconfigure.SpringBootApplication;
 +import de.codecentric.boot.admin.server.config.EnableAdminServer;
++import org.springframework.context.annotation.ComponentScan;
++import org.springframework.context.annotation.Import;
 
- @SpringBootApplication
 +@EnableAdminServer
++@ComponentScan(basePackages = { "io.steeltoe.docker.springbootadmin", "io.steeltoe.docker.ssl" })
++@Import(SteeltoeAdminConfiguration.class)
+ @SpringBootApplication
  public class SpringBootAdmin {
 
  	public static void main(String[] args) {
+ 		SpringApplication.run(SpringBootAdmin.class, args);
+ 	}
+-
+ }
