@@ -80,27 +80,34 @@ public class SslTrustConfiguration {
                         logger.debug("Default trust validation failed, checking development certificates...");
                         for (X509Certificate cert : chain) {
                             X500Principal certSubject = cert.getSubjectX500Principal();
-                            X500Principal certIssuer = cert.getIssuerX500Principal();
                             logger.trace("Checking certificate: {}", certSubject);
                             
                             // Check if this certificate matches or is signed by a dev cert
                             for (X509Certificate devCert : devCerts) {
-                                X500Principal devCertSubject = devCert.getSubjectX500Principal();
-                                X500Principal devCertIssuer = devCert.getIssuerX500Principal();
-                                
-                                // Check if certificate matches dev cert (same serial/issuer or exact match)
-                                if (cert.getSerialNumber().equals(devCert.getSerialNumber()) ||
-                                    certIssuer.equals(devCertIssuer) ||
-                                    cert.equals(devCert)) {
-                                    logger.debug("Trusting certificate signed by development CA: {}", certSubject);
-                                    return; // Trusted by development CA
+                                // First check for exact match
+                                if (cert.equals(devCert)) {
+                                    logger.debug("Trusting certificate (exact match with development cert): {}", certSubject);
+                                    return;
                                 }
                                 
-                                // Check if this certificate's issuer matches a dev cert's subject
-                                // (meaning the dev cert is the CA that signed this cert)
-                                if (certIssuer.equals(devCertSubject)) {
+                                // Then verify cryptographic signature
+                                // Only trust certs signed by dev CAs if the dev cert is actually a CA
+                                try {
+                                    // Check if dev cert has CA basic constraints
+                                    boolean isCA = devCert.getBasicConstraints() != -1;
+                                    if (!isCA) {
+                                        logger.trace("Development cert is not a CA, skipping signature verification: {}", devCert.getSubjectX500Principal());
+                                        continue;
+                                    }
+                                    
+                                    // Verify that the cert was signed by the dev cert's private key
+                                    cert.verify(devCert.getPublicKey());
                                     logger.debug("Trusting certificate signed by development CA: {}", certSubject);
                                     return; // Trusted by development CA
+                                } catch (Exception verifyException) {
+                                    // Signature verification failed, continue checking other dev certs
+                                    logger.trace("Signature verification failed for cert {} with dev cert {}: {}", 
+                                        certSubject, devCert.getSubjectX500Principal(), verifyException.getMessage());
                                 }
                             }
                         }
