@@ -116,7 +116,7 @@ try {
             if ($Revision -and $Revision -ne "") {
                 $ImageNameWithTag += "-$Revision"
             }
-            $AdditionalTags = "$(Get-Content (Join-Path $ImageDirectory "metadata" "ADDITIONAL_TAGS") | ForEach-Object { $_.replace("$Name","$DockerOrg/$Name") })"
+            $AdditionalTags = "$(Get-Content (Join-Path $ImageDirectory "metadata" "ADDITIONAL_TAGS") -ErrorAction SilentlyContinue | ForEach-Object { $_.replace("$Name","$DockerOrg/$Name") })"
         }
         else {
             $ImageNameWithTag = "$DockerOrg/${Name}:dev"

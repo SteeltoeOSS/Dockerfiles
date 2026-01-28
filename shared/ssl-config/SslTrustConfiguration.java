@@ -100,7 +100,7 @@ public class SslTrustConfiguration {
                                         continue;
                                     }
                                     
-                                    // Verify that the cert was signed by the dev cert's private key
+                                    // Verify that the cert was signed by the dev cert
                                     cert.verify(devCert.getPublicKey());
                                     logger.debug("Trusting certificate signed by development CA: {}", certSubject);
                                     return; // Trusted by development CA
