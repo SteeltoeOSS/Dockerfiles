@@ -67,9 +67,12 @@ jobs:
             owner: context.repo.owner,
             repo: context.repo.repo,
             issue_number: context.issue.number,
+            per_page: 100,
           });
 
-          const existingComment = comments.find(comment => comment.body.startsWith(marker));
+          const existingComment = comments.find(comment =>
+            comment.user.login === 'github-actions[bot]' && comment.body.startsWith(marker)
+          );
 
           if (existingComment) {
             await github.rest.issues.updateComment({
