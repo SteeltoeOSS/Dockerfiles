@@ -112,8 +112,8 @@ try {
     if (!$Tag) {
         if ($env:GITHUB_ACTIONS -eq "true") {
             $ImageNameWithTag = "$DockerOrg/${Name}:$Version"
-            $Revision = Get-Content (Join-Path $ImageDirectory "metadata" "IMAGE_REVISION")
-            if ($Revision) {
+            $Revision = (Get-Content (Join-Path $ImageDirectory "metadata" "IMAGE_REVISION") -ErrorAction SilentlyContinue | ForEach-Object { $_.Trim() }) -join ""
+            if ($Revision -and $Revision -ne "") {
                 $ImageNameWithTag += "-$Revision"
             }
             $AdditionalTags = "$(Get-Content (Join-Path $ImageDirectory "metadata" "ADDITIONAL_TAGS") | ForEach-Object { $_.replace("$Name","$DockerOrg/$Name") })"
