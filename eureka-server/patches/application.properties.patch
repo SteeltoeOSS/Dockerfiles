@@ -9,7 +9,6 @@
 +# Set myUrl to match defaultZone so Eureka recognizes itself and skips self-replication
 +eureka.server.myUrl = ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
 +eureka.server.enable-self-preservation = false
-+eureka.server.enableSelfPreservation = false
 +eureka.server.numberOfReplicationRetries = 0
 +eureka.server.evictionIntervalTimerInMs = 1000
 +eureka.server.responseCacheUpdateIntervalMs = 1000
