@@ -112,11 +112,11 @@ try {
     if (!$Tag) {
         if ($env:GITHUB_ACTIONS -eq "true") {
             $ImageNameWithTag = "$DockerOrg/${Name}:$Version"
-            $Revision = Get-Content (Join-Path $ImageDirectory "metadata" "IMAGE_REVISION")
-            if ($Revision) {
+            $Revision = (Get-Content (Join-Path $ImageDirectory "metadata" "IMAGE_REVISION") -ErrorAction SilentlyContinue | ForEach-Object { $_.Trim() }) -join ""
+            if ($Revision -and $Revision -ne "") {
                 $ImageNameWithTag += "-$Revision"
             }
-            $AdditionalTags = "$(Get-Content (Join-Path $ImageDirectory "metadata" "ADDITIONAL_TAGS") | ForEach-Object { $_.replace("$Name","$DockerOrg/$Name") })"
+            $AdditionalTags = "$(Get-Content (Join-Path $ImageDirectory "metadata" "ADDITIONAL_TAGS") -ErrorAction SilentlyContinue | ForEach-Object { $_.replace("$Name","$DockerOrg/$Name") })"
         }
         else {
             $ImageNameWithTag = "$DockerOrg/${Name}:dev"
@@ -249,8 +249,21 @@ try {
                             # Verify the file was actually created by checking if target exists
                             # Extract the target file path from the +++ line (first one after --- /dev/null)
                             $targetFile = $null
-                            if ($patchContent -match '(?m)^--- /dev/null\s+.*\r?\n\+\+\+ ([^\t]+)') {
-                                $targetFile = $matches[1] -replace '^\./', ''
+                            $lines = $patchContent -split "`n"
+                            $foundDevNull = $false
+                            foreach ($line in $lines) {
+                                if (-not $foundDevNull) {
+                                    if ($line -match '^--- /dev/null') {
+                                        $foundDevNull = $true
+                                    }
+                                    continue
+                                }
+                                if ($line -match '^\+\+\+\s+([^\t\r\n]+)') {
+                                    $targetFile = $matches[1] -replace '^\./', ''
+                                    break
+                                }
+                            }
+                            if ($targetFile) {
                                 # Remove any trailing whitespace or timestamp
                                 $targetFile = $targetFile.Trim()
                                 if ($targetFile -and (Test-Path $targetFile)) {
@@ -282,17 +295,24 @@ try {
                 $repoRoot = Split-Path -Parent $workspaceDir
                 $sharedSslDir = Join-Path $repoRoot "shared" "ssl-config"
                 if (Test-Path $sharedSslDir) {
-                    $sharedJavaDir = Join-Path "src" "main" "java" "io" "steeltoe" "docker" "ssl"
-                    if (!(Test-Path $sharedJavaDir)) {
-                        New-Item -ItemType Directory -Path $sharedJavaDir -Force | Out-Null
+                    # Place the shared SSL configuration into the app's base package
+                    # so that it is discovered by Spring's component scanning.
+                    $appJavaDir = Join-Path "src" "main" "java" "io" "steeltoe" "docker" $serverName
+                    if (!(Test-Path $appJavaDir)) {
+                        New-Item -ItemType Directory -Path $appJavaDir -Force | Out-Null
                     }
 
                     # Copy SslTrustConfiguration.java (used by all services)
                     $sslTrustConfig = Join-Path $sharedSslDir "SslTrustConfiguration.java"
                     if (Test-Path $sslTrustConfig) {
-                        $targetFile = Join-Path $sharedJavaDir "SslTrustConfiguration.java"
-                        Write-Host "Copying shared SSL trust configuration"
+                        $targetFile = Join-Path $appJavaDir "SslTrustConfiguration.java"
+                        Write-Host "Copying shared SSL trust configuration into app package"
                         Copy-Item $sslTrustConfig $targetFile -Force
+
+                        # Update the package declaration so the class resides in the app's package
+                        $packagePattern = 'package\s+io\.steeltoe\.docker\.ssl;'
+                        $newPackageDeclaration = "package io.steeltoe.docker.$serverName;"
+                        (Get-Content $targetFile) -replace $packagePattern, $newPackageDeclaration | Set-Content $targetFile
                     }
                 }
 
