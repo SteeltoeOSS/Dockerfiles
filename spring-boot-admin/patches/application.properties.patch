@@ -3,4 +3,4 @@
 @@ -0,0 +1,3 @@
 +server.port=9099
 +spring.thymeleaf.check-template-location=false
-+logging.level.io.steeltoe.docker.ssl=INFO
++logging.level.io.steeltoe.docker=INFO

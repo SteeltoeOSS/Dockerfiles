@@ -11,4 +11,4 @@
 +eureka.instance.hostname=host.docker.internal
 +eureka.instance.instanceId=host.docker.internal:configserver:8888
 +auth.enabled=false
-+logging.level.io.steeltoe.docker.ssl=INFO
++logging.level.io.steeltoe.docker=INFO

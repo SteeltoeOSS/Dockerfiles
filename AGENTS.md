@@ -28,8 +28,9 @@ Before submitting patch changes:
 ### Patch Format Rules
 
 1. **Hunk headers must be accurate**: The format is `@@ -old_start,old_count +new_start,new_count @@`
-   - `new_count` must equal the exact number of lines with `+` prefix in the hunk
-   - For new file patches (`--- /dev/null`), `old_count` is 0
+   - `old_count` is the number of lines in the hunk from the old file (context lines plus lines with `-` prefix)
+   - `new_count` is the number of lines in the hunk in the new file (context lines plus lines with `+` prefix)
+   - For new file patches (`--- /dev/null`), `old_count` is 0 and `new_count` is the total number of lines in the new-file hunk
 2. **Trailing newlines are required**: Patch files must end with a newline character. The `patch` utility will fail with "unexpected end of file" otherwise.
 3. **Preserve exact whitespace**: Context lines must match the target file exactly, including trailing spaces and tabs.
 4. **New file patches**: Use `/dev/null` as the old file:

@@ -14,5 +14,5 @@
 +eureka.server.responseCacheUpdateIntervalMs = 1000
 +eureka.server.wait-time-in-ms-when-sync-empty = 0
 +logging.level.com.netflix.eureka = TRACE
-+logging.level.io.steeltoe.docker.ssl = INFO
++logging.level.io.steeltoe.docker = INFO
 +spring.main.lazy-initialization = true
