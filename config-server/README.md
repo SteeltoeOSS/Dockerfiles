@@ -3,6 +3,7 @@
 Image for SteeltoeOSS local development with [Spring Cloud Config Server](https://docs.spring.io/spring-cloud-config/docs/current/reference/html/).
 
 Dummy change.
+Another change.
 
 ## Running
 
