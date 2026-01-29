@@ -2,8 +2,6 @@ name: Build Spring Boot Admin Server
 
 on:
   pull_request:
-    branches:
-    - main
     paths:
     - '.github/workflows/build_springboot_admin_server.yaml'
     - 'spring-boot-admin/**'
