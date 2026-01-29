@@ -4,6 +4,7 @@ Image for SteeltoeOSS local development with [Spring Cloud Config Server](https:
 
 Dummy change.
 Another change.
+More changes.
 
 ## Running
 
