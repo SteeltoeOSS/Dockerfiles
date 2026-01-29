@@ -58,7 +58,7 @@ jobs:
           const body = `${marker}
           To run the Eureka server image built for this pull request:
           \`\`\`bash
-          docker run --rm -d --pull=always -p 8761:8761 --name eureka-pr steeltoe.azurecr.io/eureka-server:pr-${{ github.event.number }}
+          docker run --rm -d --pull=always -p 8761:8761 --name eureka-pr steeltoe2.azurecr.io/eureka-server:pr-${{ github.event.number }}
           \`\`\``;
 
           const { data: comments } = await github.rest.issues.listComments({
