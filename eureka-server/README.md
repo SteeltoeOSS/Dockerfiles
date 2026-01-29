@@ -2,6 +2,8 @@
 
 Image for SteeltoeOSS local development with [Spring Cloud Eureka Server](https://cloud.spring.io/spring-cloud-netflix/reference/html).
 
+Test comment to ensure something changed.
+
 ## Running
 
 ```shell
