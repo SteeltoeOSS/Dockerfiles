@@ -2,8 +2,6 @@ name: Build Eureka Server
 
 on:
   pull_request:
-    branches:
-    - main
     paths:
     - '.github/workflows/build_eureka_server.yaml'
     - 'eureka-server/**'
