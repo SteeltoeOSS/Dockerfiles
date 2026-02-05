@@ -1,6 +1,6 @@
 --- configserver/src/main/java/io/steeltoe/docker/configserver/ConfigServer.java	2024-02-21 13:33:04.000000000 -0600
-+++ configserver/src/main/java/io/steeltoe/docker/configserver/ConfigServer.java	2026-01-27 00:00:00.000000000 -0600
-@@ -1,10 +1,20 @@
++++ configserver/src/main/java/io/steeltoe/docker/configserver/ConfigServer.java	2024-04-02 13:40:40.622446300 -0600
+@@ -1,12 +1,22 @@
  package io.steeltoe.docker.configserver;
 
 +import org.slf4j.Logger;
@@ -21,3 +21,4 @@
 +        Package pkg = EnableConfigServer.class.getPackage();
 +        logger.info("{} {} by {}", pkg.getImplementationTitle(), pkg.getImplementationVersion(), pkg.getImplementationVendor());
  		SpringApplication.run(ConfigServer.class, args);
+ 	}
