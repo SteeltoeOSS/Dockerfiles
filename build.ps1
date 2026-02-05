@@ -64,7 +64,7 @@ try {
         $DockerOrg = $Registry
     }
     else {
-        $DockerOrg = "steeltoeoss"
+        $DockerOrg = "steeltoe.azurecr.io"
     }
 
     if ($Help) {
