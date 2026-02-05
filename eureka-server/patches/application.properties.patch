@@ -1,6 +1,6 @@
 --- eurekaserver/src/main/resources/application.properties	2024-02-21 15:43:09.000000000 -0600
 +++ eurekaserver/src/main/resources/application.properties	2026-01-27 00:00:00.000000000 -0500
-@@ -0,0 +1,15 @@
+@@ -0,0 +1,14 @@
 +server.port = 8761
 +eureka.client.fetch-registry = false
 +eureka.client.register-with-eureka = false
@@ -14,5 +14,4 @@
 +eureka.server.responseCacheUpdateIntervalMs = 1000
 +eureka.server.wait-time-in-ms-when-sync-empty = 0
 +logging.level.com.netflix.eureka = TRACE
-+logging.level.io.steeltoe.docker = INFO
 +spring.main.lazy-initialization = true
