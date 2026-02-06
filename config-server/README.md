@@ -7,13 +7,13 @@ Image for SteeltoeOSS local development with [Spring Cloud Config Server](https:
 Default configuration:
 
 ```shell
-docker run --publish 8888:8888 steeltoe.azurecr.io/config-server:4
+docker run --publish 8888:8888 steeltoe.azurecr.io/config-server
 ```
 
 Custom git repo configuration:
 
 ```shell
-docker run --publish 8888:8888 steeltoe.azurecr.io/config-server:4 \
+docker run --publish 8888:8888 steeltoe.azurecr.io/config-server \
     --spring.cloud.config.server.git.uri=https://github.com/myorg/myrepo.git
 ```
 
@@ -28,7 +28,7 @@ docker run --publish 8888:8888 --volume /path/to/my/config:/config steeltoe.azur
 With basic auth:
 
 ```shell
-docker run --publish 8888:8888 steeltoe.azurecr.io/config-server:4 \
+docker run --publish 8888:8888 steeltoe.azurecr.io/config-server \
     --auth.enabled=true \
     --auth.username=myCustomUser \
     --auth.password=myCustomPassword

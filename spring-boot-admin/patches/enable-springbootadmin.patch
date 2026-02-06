@@ -1,20 +1,13 @@
 --- ./src/main/java/io/steeltoe/docker/springbootadmin/SpringBootAdmin.java	2024-09-20 12:49:35.099908129 -0500
 +++ ./src/main/java/io/steeltoe/docker/springbootadmin/SpringBootAdmin.java	2026-01-27 00:00:00.000000000 -0500
-@@ -1,13 +1,17 @@
- package io.steeltoe.docker.springbootadmin;
- 
+@@ -2,7 +2,11 @@
+
  import org.springframework.boot.SpringApplication;
  import org.springframework.boot.autoconfigure.SpringBootApplication;
-+import de.codecentric.boot.admin.server.config.EnableAdminServer;
 +import org.springframework.context.annotation.Import;
- 
++import de.codecentric.boot.admin.server.config.EnableAdminServer;
+
 +@EnableAdminServer
 +@Import(SteeltoeAdminConfiguration.class)
  @SpringBootApplication
  public class SpringBootAdmin {
- 
- 	public static void main(String[] args) {
- 		SpringApplication.run(SpringBootAdmin.class, args);
- 	}
- 
- }

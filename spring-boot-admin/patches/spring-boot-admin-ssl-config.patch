@@ -22,7 +22,7 @@
 + * Spring Boot Admin SSL Configuration
 + *
 + * Configures Spring Boot Admin's WebClient to use the shared SSL trust manager
-+ * for trusting development certificates (e.g., Aspire development certificates).
++ * for trusting development certificates (e.g., ASP.NET Core development certificates).
 + *
 + * Uses ObjectProvider for AOT compatibility - the trust manager is resolved at runtime
 + * when the bean method is called, not at configuration class construction time.

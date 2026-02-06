@@ -7,13 +7,13 @@ This directory contains resources for building a [CloudFoundry User Account and 
 To run this image locally:
 
 ```shell
-docker run -it -p 8080:8080 --name steeltoe-uaa steeltoe.azurecr.io/uaa-server:78
+docker run -it -p 8080:8080 --name steeltoe-uaa steeltoe.azurecr.io/uaa-server
 ```
 
 To run this image locally, overwriting the included `uaa.yml` file:
 
 ```shell
-docker run -it -p 8080:8080 --name steeltoe-uaa -v $pwd/uaa.yml:/uaa/uaa.yml steeltoe.azurecr.io/uaa-server:78
+docker run -it -p 8080:8080 --name steeltoe-uaa -v $pwd/uaa.yml:/uaa/uaa.yml steeltoe.azurecr.io/uaa-server
 ```
 
 ## Customizing for your Cloud Foundry environment
@@ -27,6 +27,6 @@ These instructions will help you build and deploy a custom image to use as an id
 1. `.\build.ps1 uaa-server`.
 1. Push the image to an image repository accessible from your Cloud Foundry environment.
 1. Deploy the image with a command similar to this:
-   * `cf push steeltoe-uaa --docker-image steeltoe.azurecr.io/uaa-server:78`
-1. (Operator task) [Add the new identity provider with OpenID Connect](https://techdocs.broadcom.com/us/en/vmware-tanzu/platform-services/single-sign-on-for-tanzu/1-16/sso-tanzu/operator-guide.html#config-ext-id)
+   * `cf push steeltoe-uaa --docker-image steeltoe.azurecr.io/uaa-server`
+1. (Operator task) [Add the new identity provider with OpenID Connect](https://techdocs.broadcom.com/us/en/vmware-tanzu/platform/single-sign-on/1-16/sso/configure-external-id.html#config-ext-prov)
    * Use the `ssotile` credentials from uaa.yml

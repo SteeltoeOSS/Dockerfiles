@@ -1,6 +1,6 @@
 --- /dev/null
 +++ ./src/main/java/io/steeltoe/docker/springbootadmin/SslTrustConfiguration.java	2026-01-27 00:00:00.000000000 +0000
-@@ -0,0 +1,193 @@
+@@ -0,0 +1,198 @@
 +package io.steeltoe.docker.springbootadmin;
 +
 +import org.slf4j.Logger;
@@ -24,25 +24,18 @@
 +/**
 + * SSL Trust Configuration
 + *
-+ * This configuration class provides SSL certificate trust support for development environments.
++ * <p>This configuration class provides SSL certificate trust support for development environments.
 + * It automatically loads certificates from environment variables or standard locations and
 + * creates a custom TrustManager that trusts both standard CA certificates and development
-+ * certificates (e.g., Aspire development certificates).
++ * certificates (e.g., ASP.NET Core development certificates).</p>
 + *
-+ * <p>Certificate locations checked (in order):
++ * <p>Certificate locations checked:</p>
 + * <ul>
-+ *   <li>{@code SSL_CERT_DIR} environment variable (directory containing certificates)</li>
-+ *   <li>{@code /usr/lib/ssl/aspire} (default development certificate directory, e.g., for Aspire)</li>
-+ *   <li>{@code SSL_CERT_FILE} environment variable (single certificate file)</li>
++ *   <li>{@code SSL_CERT_DIR} environment variable - colon-separated list of directories containing certificates</li>
++ *   <li>{@code SSL_CERT_FILE} environment variable - path to a single certificate file</li>
 + * </ul>
 + *
-+ * <p>Supported certificate formats: .pem, .crt, .cer
-+ *
-+ * <p>Example usage with Aspire:
-+ * <pre>
-+ * // Aspire automatically sets SSL_CERT_DIR or mounts certificates at /usr/lib/ssl/aspire
-+ * // This configuration will automatically detect and trust those certificates
-+ * </pre>
++ * <p>Supported certificate formats: .pem, .crt, .cer</p>
 + */
 +@Configuration
 +public class SslTrustConfiguration {
@@ -84,7 +77,7 @@
 +                        for (X509Certificate cert : chain) {
 +                            X500Principal certSubject = cert.getSubjectX500Principal();
 +                            logger.trace("Checking certificate: {}", certSubject);
-+                            
++
 +                            // Check if this certificate matches or is signed by a dev cert
 +                            for (X509Certificate devCert : devCerts) {
 +                                // First check for exact match
@@ -92,7 +85,7 @@
 +                                    logger.debug("Trusting certificate (exact match with development cert): {}", certSubject);
 +                                    return;
 +                                }
-+                                
++
 +                                // Then verify cryptographic signature
 +                                // Only trust certs signed by dev CAs if the dev cert is actually a CA
 +                                try {
@@ -102,14 +95,14 @@
 +                                        logger.trace("Development cert is not a CA, skipping signature verification: {}", devCert.getSubjectX500Principal());
 +                                        continue;
 +                                    }
-+                                    
++
 +                                    // Verify that the cert was signed by the dev cert
 +                                    cert.verify(devCert.getPublicKey());
 +                                    logger.debug("Trusting certificate signed by development CA: {}", certSubject);
 +                                    return; // Trusted by development CA
 +                                } catch (Exception verifyException) {
 +                                    // Signature verification failed, continue checking other dev certs
-+                                    logger.trace("Signature verification failed for cert {} with dev cert {}: {}", 
++                                    logger.trace("Signature verification failed for cert {} with dev cert {}: {}",
 +                                        certSubject, devCert.getSubjectX500Principal(), verifyException.getMessage());
 +                                }
 +                            }
@@ -151,17 +144,27 @@
 +        logger.debug("Loading development certificates...");
 +        try {
 +            CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
-+            String[] certPaths = {
-+                System.getenv("SSL_CERT_DIR"),
-+                "/usr/lib/ssl/aspire",
-+                System.getenv("SSL_CERT_FILE")
-+            };
++            List<String> certPaths = new ArrayList<>();
 +
-+            logger.trace("Checking certificate paths: SSL_CERT_DIR={}, /usr/lib/ssl/aspire, SSL_CERT_FILE={}",
-+                System.getenv("SSL_CERT_DIR"), System.getenv("SSL_CERT_FILE"));
++            // SSL_CERT_DIR can be colon-separated list of directories (OpenSSL standard)
++            String sslCertDir = System.getenv("SSL_CERT_DIR");
++            if (sslCertDir != null && !sslCertDir.isEmpty()) {
++                for (String dir : sslCertDir.split(":")) {
++                    if (!dir.isEmpty()) {
++                        certPaths.add(dir);
++                    }
++                }
++            }
++
++            // SSL_CERT_FILE for single certificate file
++            String sslCertFile = System.getenv("SSL_CERT_FILE");
++            if (sslCertFile != null && !sslCertFile.isEmpty()) {
++                certPaths.add(sslCertFile);
++            }
++
++            logger.debug("Checking certificate paths: {}", certPaths);
 +
 +            for (String certPath : certPaths) {
-+                if (certPath == null) continue;
 +                Path path = Paths.get(certPath);
 +                if (Files.isDirectory(path)) {
 +                    logger.debug("Scanning directory for certificates: {}", certPath);
@@ -186,6 +189,8 @@
 +                    } catch (Exception e) {
 +                        logger.warn("Failed to load certificate {}: {}", path, e.getMessage());
 +                    }
++                } else {
++                    logger.trace("Path does not exist or is not accessible: {}", certPath);
 +                }
 +            }
 +        } catch (Exception e) {

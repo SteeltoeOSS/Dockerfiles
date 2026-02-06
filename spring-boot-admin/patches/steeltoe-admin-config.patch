@@ -81,7 +81,7 @@
 +                log.info("Steeltoe-compatible WebClient configuration complete");
 +
 +            } catch (ClassNotFoundException e) {
-+                log.error("Failed to load SBA Response classes: {}", e.getMessage());
++                log.error("Failed to load SBA Response class: {}", e.getMessage());
 +            }
 +        };
 +    }
