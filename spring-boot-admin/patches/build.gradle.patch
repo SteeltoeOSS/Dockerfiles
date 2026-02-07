@@ -9,6 +9,6 @@
 +    createdDate = "now"
 +    environment = [
 +       "BP_SPRING_CLOUD_BINDINGS_DISABLED": "true",
-+       "BP_NATIVE_IMAGE_BUILD_ARGUMENTS": "-H:+UnlockExperimentalVMOptions"
++       "BP_JVM_AOTCACHE_ENABLED": "true"
 +    ]
 +}

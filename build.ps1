@@ -164,7 +164,7 @@ try {
             }
             "spring-boot-admin" {
                 $appName = "SpringBootAdmin"
-                $dependencies = "codecentric-spring-boot-admin-server,native"
+                $dependencies = "codecentric-spring-boot-admin-server"
             }
             Default {
                 Write-Host "$Name is not currently supported by this script"
