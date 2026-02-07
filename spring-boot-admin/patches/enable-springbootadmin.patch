@@ -7,7 +7,7 @@
 +import org.springframework.context.annotation.Import;
 +import de.codecentric.boot.admin.server.config.EnableAdminServer;
 
+ @SpringBootApplication
 +@EnableAdminServer
 +@Import(SteeltoeAdminConfiguration.class)
- @SpringBootApplication
  public class SpringBootAdmin {
