@@ -179,7 +179,7 @@ try {
         Push-Location $workPath
         try {
             $serverName = $Name -replace '-', ''
-            $JVM = "21"
+            $JVM = "25"
             $bootVersion = Get-Content (Join-path $ImageDirectory "metadata" "SPRING_BOOT_VERSION")
             $serverVersion = Get-Content (Join-Path $ImageDirectory "metadata" "IMAGE_VERSION")
             $artifactName = "$serverName$serverVersion-boot$bootVersion-jvm$JVM.zip"
