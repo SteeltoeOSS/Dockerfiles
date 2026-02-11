@@ -18,7 +18,7 @@ To build these images you must also have:
 
 1. Access to start.spring.io
 1. `patch` available in the path or installed with Git for Windows
-1. JDK 21
+1. JDK 25
 
 If you do not already have a JDK installed, consider using [Scoop](https://scoop.sh/):
 
@@ -30,7 +30,7 @@ Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
 # Add the Java bucket
 scoop bucket add java
 # Install the JDK
-scoop install java/openjdk21
+scoop install java/openjdk25
 ```
 
 ### Build a specific image
