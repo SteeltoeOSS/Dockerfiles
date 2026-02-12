@@ -40,6 +40,6 @@ docker run --publish 8888:8888 steeltoe.azurecr.io/config-server \
 | ---- | ----------- |
 | /_{app}_/_{profile}_ | Configuration data for app in Spring profile |
 | /_{app}_/_{profile}_/_{label}_ | Add a git label |
-| /_{app}_/_{profiles}/{label}_/_{path}_ | Environment-specific plain text config file at _{path}_|
+| /_{app}_/_{profiles}/{label}_/_{path}_ | Environment-specific plain text config file at _{path}_ |
 
 _Example:_ <http://localhost:8888/foo/bar>

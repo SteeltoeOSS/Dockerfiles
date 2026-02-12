@@ -1,10 +1,15 @@
 --- eurekaserver/src/main/resources/application.properties	2024-02-21 15:43:09.000000000 -0600
-+++ eurekaserver/src/main/resources/application.properties	2024-04-02 13:15:18.461432100 -0500
-@@ -0,0 +1,9 @@
++++ eurekaserver/src/main/resources/application.properties	2026-01-27 00:00:00.000000000 -0500
+@@ -0,0 +1,14 @@
 +server.port = 8761
 +eureka.client.fetch-registry = false
 +eureka.client.register-with-eureka = false
++eureka.client.serviceUrl.defaultZone = ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
++eureka.instance.hostname = localhost
++# Set myUrl to match defaultZone so Eureka recognizes itself and skips self-replication
++eureka.server.myUrl = ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
 +eureka.server.enable-self-preservation = false
++eureka.server.numberOfReplicationRetries = 0
 +eureka.server.evictionIntervalTimerInMs = 1000
 +eureka.server.responseCacheUpdateIntervalMs = 1000
 +eureka.server.wait-time-in-ms-when-sync-empty = 0

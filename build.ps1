@@ -64,7 +64,7 @@ try {
         $DockerOrg = $Registry
     }
     else {
-        $DockerOrg = "steeltoeoss"
+        $DockerOrg = "steeltoe.azurecr.io"
     }
 
     if ($Help) {
@@ -112,11 +112,11 @@ try {
     if (!$Tag) {
         if ($env:GITHUB_ACTIONS -eq "true") {
             $ImageNameWithTag = "$DockerOrg/${Name}:$Version"
-            $Revision = Get-Content (Join-Path $ImageDirectory "metadata" "IMAGE_REVISION")
-            if ($Revision) {
+            $Revision = (Get-Content (Join-Path $ImageDirectory "metadata" "IMAGE_REVISION") -ErrorAction SilentlyContinue | ForEach-Object { $_.Trim() }) -join ""
+            if ($Revision -and $Revision -ne "") {
                 $ImageNameWithTag += "-$Revision"
             }
-            $AdditionalTags = "$(Get-Content (Join-Path $ImageDirectory "metadata" "ADDITIONAL_TAGS") | ForEach-Object { $_.replace("$Name","$DockerOrg/$Name") })"
+            $AdditionalTags = "$(Get-Content (Join-Path $ImageDirectory "metadata" "ADDITIONAL_TAGS") -ErrorAction SilentlyContinue | ForEach-Object { $_.replace("$Name","$DockerOrg/$Name") })"
         }
         else {
             $ImageNameWithTag = "$DockerOrg/${Name}:dev"
@@ -149,14 +149,8 @@ try {
         Invoke-Expression $docker_command
     }
     else {
-        if (!(Get-Command "patch" -ErrorAction SilentlyContinue)) {
-            if (Test-Path "$Env:ProgramFiles\Git\usr\bin\patch.exe") {
-                Write-Host "'patch' command not found, but Git is installed; adding Git usr\bin to PATH"
-                $env:Path += ";$Env:ProgramFiles\Git\usr\bin"
-            }
-            else {
-                throw "'patch' command not found"
-            }
+        if (!(Get-Command "git" -ErrorAction SilentlyContinue)) {
+            throw "'git' command not found"
         }
 
         switch ($Name) {
@@ -170,7 +164,7 @@ try {
             }
             "spring-boot-admin" {
                 $appName = "SpringBootAdmin"
-                $dependencies = "codecentric-spring-boot-admin-server,native"
+                $dependencies = "codecentric-spring-boot-admin-server"
             }
             Default {
                 Write-Host "$Name is not currently supported by this script"
@@ -185,7 +179,7 @@ try {
         Push-Location $workPath
         try {
             $serverName = $Name -replace '-', ''
-            $JVM = "21"
+            $JVM = "25"
             $bootVersion = Get-Content (Join-path $ImageDirectory "metadata" "SPRING_BOOT_VERSION")
             $serverVersion = Get-Content (Join-Path $ImageDirectory "metadata" "IMAGE_VERSION")
             $artifactName = "$serverName$serverVersion-boot$bootVersion-jvm$JVM.zip"
@@ -207,7 +201,7 @@ try {
 
             # Scaffold project on start.spring.io
             if (!(Test-Path "$artifactName")) {
-                Write-Host "Using start.spring.io to create project"
+                Write-Host "Using start.spring.io to create project with dependencies: $dependencies"
                 Invoke-WebRequest `
                     -Uri "https://start.spring.io/starter.zip" `
                     -Method Post `
@@ -238,10 +232,11 @@ try {
                 # Apply patches
                 foreach ($patch in Get-ChildItem -Path (Join-Path $ImageDirectory patches) -Filter "*.patch") {
                     Write-Host "Applying patch $($patch.Name)"
-                    Get-Content $patch | & patch -p1
+                    git apply --unidiff-zero --recount --ignore-whitespace $patch.FullName
                     if ($LASTEXITCODE -ne 0) {
-                        throw "Patch failed with exit code $LASTEXITCODE"
+                        throw "Patch $($patch.Name) failed with exit code $LASTEXITCODE"
                     }
+                    Write-Host "Patch $($patch.Name) applied successfully"
                 }
 
                 # Build the image
