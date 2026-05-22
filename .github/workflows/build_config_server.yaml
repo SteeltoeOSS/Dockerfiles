@@ -33,7 +33,7 @@ jobs:
     name: Build and push image
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Build Image
       run: ./build.ps1 -Name '${{ env.IMAGE_NAME }}' -Registry '${{ env.REGISTRY }}' -Tag '${{ env.TAG }}'
@@ -42,7 +42,7 @@ jobs:
         TAG: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || '' }}
 
     - name: Login to container registry
-      uses: docker/login-action@v3
+      uses: docker/login-action@v4
       with:
         registry: ${{ vars.DOCKER_REGISTRY }}
         username: ${{ secrets.DOCKER_USERNAME }}
@@ -52,7 +52,7 @@ jobs:
       run: docker push --all-tags ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
     - name: Post or update PR comment with image run instructions
-      uses: actions/github-script@v7
+      uses: actions/github-script@v9
       if: ${{ github.event_name == 'pull_request' }}
       with:
         script: |
