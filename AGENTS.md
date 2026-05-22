@@ -2,58 +2,76 @@
 
 This file contains important reminders and guidelines for AI agents working on this codebase.
 
+## Architecture Overview
+
+Each Java image (config-server, eureka-server, spring-boot-admin) has a committed `source/` directory containing the complete, ready-to-build Gradle project. The build flow is:
+
+1. **`update-project.ps1`** — Regenerates `<image>/source/` from scratch:
+   - Downloads a fresh project from `start.spring.io`
+   - Applies patches from `<image>/patches/`
+   - Commits the result to `<image>/source/`
+
+2. **`build.ps1`** — Builds the Docker image:
+   - Copies `<image>/source/` into `workspace/<image>/`
+   - Runs `./gradlew bootBuildImage` to produce the container image
+
+The UAA server uses a static Dockerfile and does not have a `source/` directory.
+
 ## Build Script
 
 ### Avoid `-DisableCache` Flag
 
-**Do NOT use `-DisableCache`** when running `build.ps1` from agentic contexts. The `start.spring.io` service may block or rate-limit automated traffic, causing connection failures.
+`-DisableCache` is a no-op for the Java images (source is committed). It only affects UAA server builds (disables Docker layer cache). Do not use it from agentic contexts.
 
-Instead, to get a fresh build:
+### Updating Source for a Java Image
 
-1. Delete the expanded project folder (e.g., `workspace/springbootadmin/`)
-2. Run `.\build.ps1 <image-name>` without the flag
+To update an image's committed source to a new Spring Boot version or dependency:
+
+1. Update `<image>/metadata/SPRING_BOOT_VERSION` and/or `<image>/metadata/IMAGE_VERSION`
+2. Update patches in `<image>/patches/` if needed
+3. Run: `.\update-project.ps1 -Names <image-name>`
+4. Review and commit the changes in `<image>/source/`
 
 ### Testing Changes
 
-Before submitting patch changes:
+Before submitting patch or source changes:
 
-1. Run a dry-run of each patch: `git apply --check <patch-file>`
-2. If dry-run succeeds, run the full build and verify Java compilation
-3. Test the resulting Docker image with a real client app
+1. Dry-run each patch: `patch --dry-run -p1 < <patch-file>` (run from the extracted project root)
+2. If dry-run succeeds, run `.\update-project.ps1` and verify the output in `source/`
+3. Run `.\build.ps1 -Name <image>` to verify Docker image build
+4. Test the resulting Docker image with a real client app
 
 ## Patch Files
 
-The build script uses `git apply --unidiff-zero --recount --ignore-whitespace` to apply patches, which is more forgiving than the traditional `patch` command.
+Patches are applied by `update-project.ps1` using `patch -p1`, run from inside the extracted project directory.
 
 ### Patch Format Rules
 
-1. **Hunk headers should be accurate**: The format is `@@ -old_start,old_count +new_start,new_count @@`
+1. **Hunk headers must be accurate**: The format is `@@ -old_start,old_count +new_start,new_count @@`
    - `old_count` is the number of lines in the hunk from the old file (context lines plus lines with `-` prefix)
    - `new_count` is the number of lines in the hunk in the new file (context lines plus lines with `+` prefix)
-   - For new file patches (`--- /dev/null`), `old_count` is 0 and `new_count` is the total number of lines in the new-file hunk
-   - Note: `--recount` will automatically correct line counts, but keeping them accurate is still good practice
+   - Unlike `git apply --recount`, `patch -p1` does not auto-correct wrong counts — incorrect headers cause patch failures
 2. **Trailing newlines are required**: Patch files must end with a newline character.
-3. **Preserve exact whitespace**: Context lines must match the target file exactly, including trailing spaces and tabs. The `--ignore-whitespace` flag provides some tolerance but exact matches are preferred.
-4. **New file patches**: Use `/dev/null` as the old file:
+3. **Preserve exact whitespace**: Context lines must match the target file exactly. Use `--ignore-whitespace` only as a diagnostic aid, not a crutch.
+4. **Path prefix with `-p1`**: The leading path component is stripped. Patches use paths like `configserver/src/...` so with `-p1` the applied path is `src/...`, matching the project layout.
+5. **New content patches**: Patches that add lines to an (effectively) empty file use `@@ -0,0 +1,N @@`. Spring Initializr generates `spring.application.name=<AppName>` in `application.properties`; this line will appear after the patched lines in the final file.
 
-   ```diff
-   --- /dev/null
-   +++ ./path/to/NewFile.java	2026-01-27 00:00:00.000000000 +0000
-   @@ -0,0 +1,N @@
-   +line 1
-   +line 2
-   ...
-   ```
+### Example — Adding Lines
 
-### Example
-
-If a patch adds 1 line, the hunk header should reflect this:
+If a patch adds 2 lines to a 3-line context block:
 
 ```diff
--@@ -37,3 +37,10 @@
-+@@ -37,3 +37,11 @@
+-@@ -37,3 +37,5 @@
++@@ -37,3 +37,5 @@
+  context line 1
+  context line 2
+  context line 3
++added line 1
++added line 2
 ```
+
+old_count = 3 (context), new_count = 5 (3 context + 2 added).
 
 ### Why This Matters
 
-While `git apply --recount` can fix minor line count issues, keeping patches accurate ensures reliable application and easier debugging.
+`patch -p1` is strict about line counts. A mismatch causes the hunk to fail outright rather than being silently corrected.

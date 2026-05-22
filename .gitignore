@@ -6,9 +6,10 @@
 # Vi/Vim
 *.swp
 
-# Gradle
-/.gradle/
+# Gradle / IDE build output
+.gradle/
 build/
+bin/
 
 # MacOS
 .DS_Store

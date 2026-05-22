@@ -36,7 +36,7 @@
     Override the image tag.
 
     .PARAMETER Registry
-    Set the container registry. Defaults to dockerhub under steeltoeoss.
+    Set the container registry. Defaults to steeltoe.azurecr.io.
 #>
 
 # -----------------------------------------------------------------------------
@@ -149,27 +149,10 @@ try {
         Invoke-Expression $docker_command
     }
     else {
-        if (!(Get-Command "git" -ErrorAction SilentlyContinue)) {
-            throw "'git' command not found"
-        }
-
-        switch ($Name) {
-            "config-server" {
-                $appName = "ConfigServer"
-                $dependencies = "cloud-config-server,actuator,cloud-eureka,security"
-            }
-            "eureka-server" {
-                $appName = "EurekaServer"
-                $dependencies = "cloud-eureka-server,actuator"
-            }
-            "spring-boot-admin" {
-                $appName = "SpringBootAdmin"
-                $dependencies = "codecentric-spring-boot-admin-server"
-            }
-            Default {
-                Write-Host "$Name is not currently supported by this script"
-                exit 2
-            }
+        $supportedImages = @("config-server", "eureka-server", "spring-boot-admin")
+        if ($Name -notin $supportedImages) {
+            Write-Host "$Name is not currently supported by this script"
+            exit 2
         }
 
         $workPath = "workspace"
@@ -179,13 +162,10 @@ try {
         Push-Location $workPath
         try {
             $serverName = $Name -replace '-', ''
-            $JVM = "25"
-            $bootVersion = Get-Content (Join-path $ImageDirectory "metadata" "SPRING_BOOT_VERSION")
-            $serverVersion = Get-Content (Join-Path $ImageDirectory "metadata" "IMAGE_VERSION")
-            $artifactName = "$serverName$serverVersion-boot$bootVersion-jvm$JVM.zip"
+            $Version = Get-Content (Join-Path $ImageDirectory "metadata" "IMAGE_VERSION")
 
-            Write-Host "Building server: $Name@$serverVersion on Spring Boot $bootVersion"
-            Write-Host "Source files: $ImageDirectory"
+            Write-Host "Building server: $Name@$Version"
+            Write-Host "Source files: $ImageDirectory/source"
             Write-Host "Working directory: $PWD"
 
             # Ensure clean workspace
@@ -194,51 +174,16 @@ try {
                 throw "Failed to remove existing workspace $serverName"
             }
 
-            if ($DisableCache -And (Test-Path "$artifactName")) {
-                Write-Host "Removing previously downloaded $artifactName"
-                Remove-Item -Force "$artifactName"
+            # Copy source from committed directory
+            $sourceDir = Join-Path $ImageDirectory "source"
+            if (!(Test-Path $sourceDir)) {
+                throw "Source directory not found at $sourceDir. Run update-project.ps1 first."
             }
 
-            # Scaffold project on start.spring.io
-            if (!(Test-Path "$artifactName")) {
-                Write-Host "Using start.spring.io to create project with dependencies: $dependencies"
-                Invoke-WebRequest `
-                    -Uri "https://start.spring.io/starter.zip" `
-                    -Method Post `
-                    -Body @{
-                        type            = "gradle-project"
-                        bootVersion     = $bootVersion
-                        javaVersion     = $JVM
-                        groupId         = "io.steeltoe.docker"
-                        artifactId      = $serverName
-                        name            = $appName
-                        applicationName = $appName
-                        description     = "$appName for local development with Steeltoe"
-                        language        = "java"
-                        dependencies    = $dependencies
-                        version         = $serverVersion
-                    } `
-                    -OutFile $artifactName
-            }
-            else {
-                Write-Host "Using cached download from start.spring.io ($artifactName)"
-            }
-
-            New-Item -ItemType Directory -Path $serverName | Out-Null
-            Expand-Archive -Path $artifactName -DestinationPath $serverName -Force
+            Copy-Item -Path $sourceDir -Destination $serverName -Recurse -Force
 
             Push-Location $serverName
             try {
-                # Apply patches
-                foreach ($patch in Get-ChildItem -Path (Join-Path $ImageDirectory patches) -Filter "*.patch") {
-                    Write-Host "Applying patch $($patch.Name)"
-                    git apply --unidiff-zero --recount --ignore-whitespace $patch.FullName
-                    if ($LASTEXITCODE -ne 0) {
-                        throw "Patch $($patch.Name) failed with exit code $LASTEXITCODE"
-                    }
-                    Write-Host "Patch $($patch.Name) applied successfully"
-                }
-
                 # Build the image
                 $gradleArgs = @("bootBuildImage", "--imageName=$ImageNameWithTag")
                 if ($env:GITHUB_ACTIONS -eq "true") {
