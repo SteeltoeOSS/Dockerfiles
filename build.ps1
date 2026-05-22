@@ -184,6 +184,11 @@ try {
 
             Push-Location $serverName
             try {
+                # Ensure gradlew is executable (git does not preserve the execute bit on Windows)
+                if ($IsLinux -or $IsMacOS) {
+                    & chmod +x gradlew
+                }
+
                 # Build the image
                 $gradleArgs = @("bootBuildImage", "--imageName=$ImageNameWithTag")
                 if ($env:GITHUB_ACTIONS -eq "true") {
