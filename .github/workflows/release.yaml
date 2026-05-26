@@ -56,31 +56,25 @@ jobs:
     - name: Build and Push
       if: steps.filter.outputs.skip != 'true'
       run: |
-        $Version = Get-Content "${{ matrix.image }}/metadata/IMAGE_VERSION"
-        $MajorMinor = $Version.Split('.')[0..1] -join '.'
-        $Major = $Version.Split('.')[0]
+        $Version  = Get-Content "${{ matrix.image }}/metadata/IMAGE_VERSION"
+        $Revision = (Get-Content "${{ matrix.image }}/metadata/IMAGE_REVISION" -ErrorAction SilentlyContinue | ForEach-Object { $_.Trim() }) -join ""
 
-        # Build with the exact version tag so we control what name is used
-        ./build.ps1 -Name '${{ matrix.image }}' -Registry '${{ env.REGISTRY }}' -Tag $Version
+        # When IMAGE_REVISION is set, the exact tag includes the suffix (e.g. 4.3.1-2).
+        # The floating aliases (major.minor, major, latest) always track the highest revision.
+        $VersionTag  = if ($Revision) { "$Version-$Revision" } else { $Version }
+        $MajorMinor  = $Version.Split('.')[0..1] -join '.'
+        $Major       = $Version.Split('.')[0]
 
-        # Tag and push all version aliases
+        ./build.ps1 -Name '${{ matrix.image }}' -Registry '${{ env.REGISTRY }}' -Tag $VersionTag
+
         $FullImage = "${{ env.REGISTRY }}/${{ matrix.image }}"
-        docker tag "${FullImage}:${Version}" "${FullImage}:${MajorMinor}"
-        docker tag "${FullImage}:${Version}" "${FullImage}:${Major}"
-        docker tag "${FullImage}:${Version}" "${FullImage}:latest"
+        docker tag "${FullImage}:${VersionTag}" "${FullImage}:${MajorMinor}"
+        docker tag "${FullImage}:${VersionTag}" "${FullImage}:${Major}"
+        docker tag "${FullImage}:${VersionTag}" "${FullImage}:latest"
 
-        docker push "${FullImage}:${Version}"
+        docker push "${FullImage}:${VersionTag}"
         docker push "${FullImage}:${MajorMinor}"
         docker push "${FullImage}:${Major}"
         docker push "${FullImage}:latest"
-
-        # Push additional tags from metadata if any
-        if (Test-Path "${{ matrix.image }}/metadata/ADDITIONAL_TAGS") {
-             $AdditionalTags = Get-Content "${{ matrix.image }}/metadata/ADDITIONAL_TAGS"
-             foreach ($tag in $AdditionalTags.Split(" ", [System.StringSplitOptions]::RemoveEmptyEntries)) {
-                 $FullTag = $tag.Replace("${{ matrix.image }}", "${{ env.REGISTRY }}/${{ matrix.image }}")
-                 docker push $FullTag
-             }
-        }
 
       shell: pwsh

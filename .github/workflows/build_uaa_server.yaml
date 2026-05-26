@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
     - '.github/workflows/build_uaa_server.yaml'
+    - '.github/workflows/build-image.yaml'
     - 'uaa-server/Dockerfile'
     - 'uaa-server/metadata/*'
     - 'uaa-server/*.yml'
@@ -14,6 +15,7 @@ on:
     - main
     paths:
     - '.github/workflows/build_uaa_server.yaml'
+    - '.github/workflows/build-image.yaml'
     - 'uaa-server/Dockerfile'
     - 'uaa-server/metadata/*'
     - 'uaa-server/*.yml'
@@ -26,70 +28,13 @@ concurrency:
 
 permissions:
   contents: read
-  pull-requests: 'write'
-
-env:
-  IMAGE_NAME: uaa-server
-  REGISTRY: ${{ vars.DOCKER_REGISTRY }}
+  pull-requests: write
 
 jobs:
-  build-push:
-    name: Build and push image
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Build Image
-      run: ./build.ps1 -Name '${{ env.IMAGE_NAME }}' -Registry '${{ env.REGISTRY }}' -Tag '${{ env.TAG }}'
-      shell: pwsh
-      env:
-        TAG: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || 'edge' }}
-
-    - name: Login to container registry
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ vars.DOCKER_REGISTRY }}
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-
-    - name: Push image
-      run: docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || 'edge' }}
-
-    - name: Post or update PR comment with image run instructions
-      uses: actions/github-script@v7
-      if: ${{ github.event_name == 'pull_request' }}
-      with:
-        script: |
-          const marker = '<!-- IMAGE_INSTRUCTIONS_UAA_SERVER -->';
-          const body = `${marker}
-          To run the UAA server image built for this pull request:
-          \`\`\`bash
-          docker run --rm -d --pull=always -p 8080:8080 --name uaa-pr steeltoe.azurecr.io/uaa-server:pr-${{ github.event.number }}
-          \`\`\``;
-
-          const { data: comments } = await github.rest.issues.listComments({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            issue_number: context.issue.number,
-            per_page: 100,
-          });
-
-          const existingComment = comments.find(comment =>
-            comment.user.login === 'github-actions[bot]' && comment.body.startsWith(marker)
-          );
-
-          if (existingComment) {
-            await github.rest.issues.updateComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              comment_id: existingComment.id,
-              body: body,
-            });
-          } else {
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: body,
-            });
-          }
+  build:
+    uses: ./.github/workflows/build-image.yaml
+    with:
+      image: uaa-server
+      port: '8080'
+      description: UAA Server
+    secrets: inherit

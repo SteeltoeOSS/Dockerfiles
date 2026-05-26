@@ -13,6 +13,7 @@ Each Java image (config-server, eureka-server, spring-boot-admin) has a committe
 
 2. **`build.ps1`** — Builds the Docker image:
    - Copies `<image>/source/` into `workspace/<image>/`
+   - Downloads `gradle-wrapper.jar` from the Gradle GitHub repo into the workspace copy (not committed to source; version is resolved from `gradle-wrapper.properties`)
    - Runs `./gradlew bootBuildImage` to produce the container image
 
 The UAA server uses a static Dockerfile and does not have a `source/` directory.

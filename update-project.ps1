@@ -234,10 +234,12 @@ function Update-Project {
         if (Test-Path $sourceDirectory) { Remove-Item -Recurse -Force $sourceDirectory }
         New-Item -ItemType Directory -Path $sourceDirectory -Force | Out-Null
 
-        # Remove files we don't want committed (repo has its own)
+        # Remove files we don't want committed
         Get-ChildItem -Path $extractionDirectory -Recurse -Filter "*.orig" | Remove-Item -Force
-        if (Test-Path (Join-Path $extractionDirectory ".gitignore"))    { Remove-Item -Force (Join-Path $extractionDirectory ".gitignore") }
-        if (Test-Path (Join-Path $extractionDirectory ".gitattributes")) { Remove-Item -Force (Join-Path $extractionDirectory ".gitattributes") }
+        foreach ($unwanted in @(".gitignore", ".gitattributes", "HELP.md")) {
+            $unwantedPath = Join-Path $extractionDirectory $unwanted
+            if (Test-Path $unwantedPath) { Remove-Item -Force $unwantedPath }
+        }
 
         Copy-Item -Path "$extractionDirectory\*" -Destination $sourceDirectory -Recurse -Force
 

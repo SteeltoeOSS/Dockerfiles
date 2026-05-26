@@ -13,12 +13,17 @@ The following tools are required to build any image in this repository:
 
 #### Config Server, Eureka and Spring Boot Admin
 
-The process for these images is to download starter projects from start.spring.io, apply patches to those files and produce images using [the Gradle Plugin](https://docs.spring.io/spring-boot/gradle-plugin/packaging-oci-image.html).
-To build these images you must also have:
+These images use committed source generated from [start.spring.io](https://start.spring.io).
+Building uses [the Gradle Plugin](https://docs.spring.io/spring-boot/gradle-plugin/packaging-oci-image.html) against the committed source — no internet access to start.spring.io is required.
+To build these images you must have:
+
+1. JDK 25
+1. Internet access (to download the Gradle distribution and Maven dependencies on first build)
+
+To **update** the committed source to a newer Spring Boot or dependency version, you will additionally need:
 
 1. Access to start.spring.io
 1. `patch` available in the path or installed with Git for Windows
-1. JDK 25
 
 If you do not already have a JDK installed, consider using [Scoop](https://scoop.sh/):
 

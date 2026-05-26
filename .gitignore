@@ -16,3 +16,9 @@ bin/
 
 # Staging directory
 workspace/
+
+# Gradle wrapper jar is downloaded at build time, not committed to source
+**/gradle/wrapper/gradle-wrapper.jar
+
+# Spring Initializr boilerplate — no value in committed source
+**/source/HELP.md

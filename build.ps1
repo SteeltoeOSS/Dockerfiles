@@ -109,26 +109,15 @@ try {
         throw "No metadata found for $Name"
     }
 
-    if (!$Tag) {
-        if ($env:GITHUB_ACTIONS -eq "true") {
-            $ImageNameWithTag = "$DockerOrg/${Name}:$Version"
-            $Revision = (Get-Content (Join-Path $ImageDirectory "metadata" "IMAGE_REVISION") -ErrorAction SilentlyContinue | ForEach-Object { $_.Trim() }) -join ""
-            if ($Revision -and $Revision -ne "") {
-                $ImageNameWithTag += "-$Revision"
-            }
-            $AdditionalTags = "$(Get-Content (Join-Path $ImageDirectory "metadata" "ADDITIONAL_TAGS") -ErrorAction SilentlyContinue | ForEach-Object { $_.replace("$Name","$DockerOrg/$Name") })"
-        }
-        else {
-            $ImageNameWithTag = "$DockerOrg/${Name}:dev"
-            $AdditionalTags = ""
-        }
-    }
-    else {
+    if ($Tag) {
         $ImageNameWithTag = "$DockerOrg/${Name}:$Tag"
-        $AdditionalTags = ""
+    } elseif ($env:GITHUB_ACTIONS -eq "true") {
+        $ImageNameWithTag = "$DockerOrg/${Name}:$Version"
+    } else {
+        $ImageNameWithTag = "$DockerOrg/${Name}:dev"
     }
 
-    Write-Host "This image will be available as: $ImageNameWithTag $AdditionalTags"
+    Write-Host "This image will be available as: $ImageNameWithTag"
 
     if ($Name -eq "uaa-server") {
         $Dockerfile = Join-Path $ImageDirectory Dockerfile
@@ -144,7 +133,7 @@ try {
             $NoCacheArg = ""
         }
 
-        $docker_command = "docker build $NoCacheArg -t $ImageNameWithTag $AdditionalTags $ImageDirectory --build-arg SERVER_VERSION=$Version"
+        $docker_command = "docker build $NoCacheArg -t $ImageNameWithTag $ImageDirectory --build-arg SERVER_VERSION=$Version"
         Write-Host $docker_command
         Invoke-Expression $docker_command
     }
@@ -182,6 +171,23 @@ try {
 
             Copy-Item -Path $sourceDir -Destination $serverName -Recurse -Force
 
+            # gradle-wrapper.jar is not committed to source; download it from the Gradle GitHub repo
+            $wrapperJarPath = Join-Path $serverName "gradle" "wrapper" "gradle-wrapper.jar"
+            if (!(Test-Path $wrapperJarPath)) {
+                $wrapperPropertiesPath = Join-Path $serverName "gradle" "wrapper" "gradle-wrapper.properties"
+                $wrapperPropertiesContent = Get-Content $wrapperPropertiesPath -Raw
+                if ($wrapperPropertiesContent -match 'distributionUrl=.*gradle-(\d+(?:\.\d+)+)-') {
+                    $gradleVersion = $Matches[1]
+                    Write-Host "Downloading gradle-wrapper.jar for Gradle $gradleVersion..."
+                    Invoke-WebRequest `
+                        -Uri "https://raw.githubusercontent.com/gradle/gradle/v$gradleVersion/gradle/wrapper/gradle-wrapper.jar" `
+                        -OutFile $wrapperJarPath `
+                        -UseBasicParsing
+                } else {
+                    throw "Could not determine Gradle version from $wrapperPropertiesPath"
+                }
+            }
+
             Push-Location $serverName
             try {
                 # Ensure gradlew is executable (git does not preserve the execute bit on Windows)
@@ -199,11 +205,6 @@ try {
             }
             finally {
                 Pop-Location
-            }
-
-            foreach ($AdditionalTag in $AdditionalTags.Split(" ", [System.StringSplitOptions]::RemoveEmptyEntries)) {
-                Write-Host "Running 'docker tag $ImageNameWithTag $AdditionalTag'"
-                docker tag $ImageNameWithTag $AdditionalTag
             }
         }
         finally {
