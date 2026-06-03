@@ -243,9 +243,49 @@ function Update-Project {
 
         Copy-Item -Path "$extractionDirectory\*" -Destination $sourceDirectory -Recurse -Force
 
+        # Apply committed customizations that Spring Initializr does not generate, so image
+        # hardening and hand-written tests survive regeneration.
+        $customizationsDirectory = Join-Path $imageDirectory "customizations"
+        if (Test-Path $customizationsDirectory) {
+            # Append the image-build hardening block (builder/run-image digest pins, reproducible
+            # createdDate, dependency locking, test gating) to the generated build.gradle.
+            $buildGradleAppend = Join-Path $customizationsDirectory "build.gradle.append"
+            if (Test-Path $buildGradleAppend) {
+                Write-Host "Appending build.gradle customizations"
+                $buildGradlePath = Join-Path $sourceDirectory "build.gradle"
+                $generated = ([System.IO.File]::ReadAllText($buildGradlePath)) -replace "`r`n", "`n"
+                $append    = ([System.IO.File]::ReadAllText($buildGradleAppend)) -replace "`r`n", "`n"
+                [System.IO.File]::WriteAllText($buildGradlePath, $generated.TrimEnd("`n") + "`n`n" + $append)
+            }
+
+            # Overlay hand-written files (e.g. tests) on top of the generated project.
+            $overlayDirectory = Join-Path $customizationsDirectory "overlay"
+            if (Test-Path $overlayDirectory) {
+                Write-Host "Applying overlay files"
+                Copy-Item -Path (Join-Path $overlayDirectory "*") -Destination $sourceDirectory -Recurse -Force
+            }
+        }
+
         # git does not preserve Unix execute permissions on Windows; restore the bit so Linux CI can run gradlew
         if (Test-Path (Join-Path $sourceDirectory "gradlew")) {
             & git -C $imagesDirectory update-index --chmod=+x "$Name/source/gradlew" 2>&1 | Out-Null
+        }
+
+        # Regenerate dependency lockfiles so they always match the freshly resolved dependencies.
+        # Uses the wrapper jar shipped in the generated project; requires JDK 25 and network access.
+        Write-Host "Regenerating dependency locks (resolving all dependencies)..."
+        Push-Location $sourceDirectory
+        try {
+            if ($IsLinux -or $IsMacOS) { & chmod +x gradlew }
+            $gradlewCommand = if ($IsWindows) { ".\gradlew.bat" } else { "./gradlew" }
+            & $gradlewCommand --no-daemon --console=plain dependencies --write-locks | Out-Null
+            if ($LASTEXITCODE -ne 0) { throw "Lockfile regeneration failed for $Name" }
+            # Drop the transient Gradle outputs from the lock run; they are not part of source.
+            Remove-Item -Recurse -Force (Join-Path $sourceDirectory "build") -ErrorAction Ignore
+            Remove-Item -Recurse -Force (Join-Path $sourceDirectory ".gradle") -ErrorAction Ignore
+        }
+        finally {
+            Pop-Location
         }
 
         Write-Host "Updated source for $Name in $sourceDirectory"
@@ -263,7 +303,9 @@ function Update-Project {
     }
 }
 
-$imageNames = if ($Names) { $Names } else { @("config-server", "eureka-server", "spring-boot-admin") }
+# Wrap in @() so a single -Names value stays an array (PowerShell unwraps a one-element
+# array to a scalar string, which would otherwise iterate the name character by character).
+$imageNames = @(if ($Names) { $Names } else { @("config-server", "eureka-server", "spring-boot-admin") })
 
 for ($index = 0; $index -lt $imageNames.Count; $index++) {
     Update-Project -Name $imageNames[$index]
