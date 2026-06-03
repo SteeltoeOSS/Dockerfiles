@@ -15,10 +15,9 @@
     .DESCRIPTION
     Builds a specified Steeltoe Docker image.
 
-    By default, the image will be tagged using the name '<image>:[<version>[-<rev>]]' where:
-      image      the specified Image name
-      version    the value of 'IMAGE_VERSION' if specified in Dockerfile
-      rev        the value of 'IMAGE_REVISION' if specified in Dockerfile
+    The image is tagged '<registry>/<image>:<tag>' where <tag> is the value of -Tag if
+    specified; otherwise the image's metadata/IMAGE_VERSION when running in GitHub Actions;
+    otherwise 'dev' for local builds.
 
     .PARAMETER Help
     Print this message.
@@ -27,7 +26,8 @@
     List available images.
 
     .PARAMETER DisableCache
-    Disable caching of projects from start.spring.io.
+    Disable the Docker build layer cache. Only affects the UAA server; a no-op for the
+    Java images, which build from committed source.
 
     .PARAMETER Name
     Docker image name.
@@ -173,20 +173,36 @@ try {
 
             # gradle-wrapper.jar is not committed to source; download it from the Gradle GitHub repo
             $wrapperJarPath = Join-Path $serverName "gradle" "wrapper" "gradle-wrapper.jar"
-            if (!(Test-Path $wrapperJarPath)) {
-                $wrapperPropertiesPath = Join-Path $serverName "gradle" "wrapper" "gradle-wrapper.properties"
-                $wrapperPropertiesContent = Get-Content $wrapperPropertiesPath -Raw
-                if ($wrapperPropertiesContent -match 'distributionUrl=.*gradle-(\d+(?:\.\d+)+)-') {
-                    $gradleVersion = $Matches[1]
-                    Write-Host "Downloading gradle-wrapper.jar for Gradle $gradleVersion..."
-                    Invoke-WebRequest `
-                        -Uri "https://raw.githubusercontent.com/gradle/gradle/v$gradleVersion/gradle/wrapper/gradle-wrapper.jar" `
-                        -OutFile $wrapperJarPath `
-                        -UseBasicParsing
-                } else {
-                    throw "Could not determine Gradle version from $wrapperPropertiesPath"
-                }
+            $wrapperPropertiesPath = Join-Path $serverName "gradle" "wrapper" "gradle-wrapper.properties"
+            $wrapperPropertiesContent = Get-Content $wrapperPropertiesPath -Raw
+            if ($wrapperPropertiesContent -match 'distributionUrl=.*gradle-(\d+(?:\.\d+)+)-') {
+                $gradleVersion = $Matches[1]
+            } else {
+                throw "Could not determine Gradle version from $wrapperPropertiesPath"
             }
+
+            if (!(Test-Path $wrapperJarPath)) {
+                Write-Host "Downloading gradle-wrapper.jar for Gradle $gradleVersion..."
+                Invoke-WebRequest `
+                    -Uri "https://raw.githubusercontent.com/gradle/gradle/v$gradleVersion/gradle/wrapper/gradle-wrapper.jar" `
+                    -OutFile $wrapperJarPath `
+                    -UseBasicParsing
+            }
+
+            # Validate the wrapper jar against Gradle's published checksum so a tampered or
+            # truncated download can never run on a build machine (supply-chain integrity).
+            $shaContent = (Invoke-WebRequest `
+                -Uri "https://services.gradle.org/distributions/gradle-$gradleVersion-wrapper.jar.sha256" `
+                -UseBasicParsing).Content
+            if ($shaContent -is [byte[]]) {
+                $shaContent = [System.Text.Encoding]::ASCII.GetString($shaContent)
+            }
+            $expectedSha = $shaContent.Trim().ToLower()
+            $actualSha = (Get-FileHash -Algorithm SHA256 -Path $wrapperJarPath).Hash.ToLower()
+            if ($actualSha -ne $expectedSha) {
+                throw "gradle-wrapper.jar checksum mismatch for Gradle $gradleVersion (expected $expectedSha, got $actualSha)"
+            }
+            Write-Host "Verified gradle-wrapper.jar checksum ($actualSha)"
 
             Push-Location $serverName
             try {
@@ -196,7 +212,16 @@ try {
                 }
 
                 # Build the image
+                # Use the commit timestamp as the image creation date so identical source
+                # produces an identical image digest. Falls back to the build.gradle default
+                # (a fixed epoch) when git or commit metadata is unavailable.
                 $gradleArgs = @("bootBuildImage", "--imageName=$ImageNameWithTag")
+                if (Get-Command git -ErrorAction SilentlyContinue) {
+                    $createdDate = (& git -C $ImagesDirectory show -s --format=%cI HEAD 2>$null)
+                    if ($LASTEXITCODE -eq 0 -and $createdDate) {
+                        $gradleArgs += "-PimageCreatedDate=$($createdDate.Trim())"
+                    }
+                }
                 if ($env:GITHUB_ACTIONS -eq "true") {
                     $gradleArgs += "--no-daemon"
                 }
