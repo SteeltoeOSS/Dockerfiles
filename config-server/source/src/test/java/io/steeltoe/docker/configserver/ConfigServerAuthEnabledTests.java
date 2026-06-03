@@ -10,28 +10,36 @@ import org.springframework.http.ResponseEntity;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Default configuration: {@code auth.enabled=false}, so {@code BasicOrNoAuthConfig}
- * wires the permit-all security chain. The config-server health contributor is
- * disabled here so the test never reaches out to the configured git repository.
+ * With {@code auth.enabled=true}, {@code BasicOrNoAuthConfig} wires the HTTP Basic
+ * security chain plus an in-memory user. This verifies that custom logic end to end:
+ * unauthenticated requests are rejected and valid credentials are accepted.
  */
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {
+                "auth.enabled=true",
+                "auth.username=tester",
+                "auth.password=secret",
                 "spring.cloud.config.server.health.enabled=false",
                 "spring.cloud.config.server.git.cloneOnStart=false"
         })
-class ConfigServerTests {
+class ConfigServerAuthEnabledTests {
 
     @Autowired
     private TestRestTemplate restTemplate;
 
     @Test
-    void contextLoads() {
+    void rejectsRequestsWithoutCredentials() {
+        ResponseEntity<String> response = restTemplate.getForEntity("/actuator/health", String.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 
     @Test
-    void healthIsOpenWhenAuthDisabled() {
-        ResponseEntity<String> response = restTemplate.getForEntity("/actuator/health", String.class);
+    void acceptsRequestsWithValidCredentials() {
+        ResponseEntity<String> response = restTemplate
+                .withBasicAuth("tester", "secret")
+                .getForEntity("/actuator/health", String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).contains("UP");
