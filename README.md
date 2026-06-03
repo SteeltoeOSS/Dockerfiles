@@ -44,6 +44,8 @@ scoop install java/openjdk25
 ./build.ps1 config-server
 ```
 
+The build runs the project's tests first and fails if any test fails. Images are built reproducibly: the builder and run image are pinned by digest, dependency versions are locked (`gradle.lockfile`), and the image creation timestamp is derived from the commit rather than the wall clock.
+
 ## Running
 
 ### List the created images

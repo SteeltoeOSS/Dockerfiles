@@ -8,15 +8,27 @@ Each Java image (config-server, eureka-server, spring-boot-admin) has a committe
 
 1. **`update-project.ps1`** — Regenerates `<image>/source/` from scratch:
    - Downloads a fresh project from `start.spring.io`
-   - Applies patches from `<image>/patches/`
-   - Commits the result to `<image>/source/`
+   - Applies patches from `<image>/patches/` (modifications to Initializr-generated files)
+   - Applies customizations from `<image>/customizations/` (see below)
+   - Regenerates `gradle.lockfile` via `./gradlew dependencies --write-locks` so the locked dependency versions always match the resolved graph
+   - Writes the result to `<image>/source/`
+   - **Requires JDK 25 and network access** (it resolves dependencies to regenerate the lock)
 
 2. **`build.ps1`** — Builds the Docker image:
    - Copies `<image>/source/` into `workspace/<image>/`
-   - Downloads `gradle-wrapper.jar` from the Gradle GitHub repo into the workspace copy (not committed to source; version is resolved from `gradle-wrapper.properties`)
-   - Runs `./gradlew bootBuildImage` to produce the container image
+   - Downloads `gradle-wrapper.jar` into the workspace copy (not committed; version resolved from `gradle-wrapper.properties`) and verifies it against Gradle's published SHA-256
+   - Runs `./gradlew bootBuildImage`, which runs `test` first (the image build is gated on tests) and pins the builder and run image by digest for reproducible image contents
 
 The UAA server uses a static Dockerfile and does not have a `source/` directory.
+
+### Customizations (`<image>/customizations/`)
+
+Content that Spring Initializr does not generate lives here so it survives regeneration:
+
+- **`build.gradle.append`** — appended to the generated `build.gradle`. Holds the image-build hardening: digest-pinned `builder`/`runImage`, a reproducible `createdDate` (overridable via `-PimageCreatedDate`), `dependencyLocking`, and the `bootBuildImage` → `test` dependency.
+- **`overlay/`** — files copied verbatim over the generated project after patching (mirrors the project layout). Holds the hand-written tests.
+
+Edit these (or `patches/`), **not `source/` directly**, then run `update-project.ps1` to regenerate. `build.gradle` is customized via `build.gradle.append` (an append is more robust than a line-anchored patch), so there is no `build.gradle.patch`.
 
 ## Build Script
 
@@ -29,18 +41,19 @@ The UAA server uses a static Dockerfile and does not have a `source/` directory.
 To update an image's committed source to a new Spring Boot version or dependency:
 
 1. Update `<image>/metadata/SPRING_BOOT_VERSION` and/or `<image>/metadata/IMAGE_VERSION`
-2. Update patches in `<image>/patches/` if needed
-3. Run: `.\update-project.ps1 -Names <image-name>`
-4. Review and commit the changes in `<image>/source/`
+2. Update `<image>/patches/` and/or `<image>/customizations/` if needed
+3. Run: `.\update-project.ps1 -Names <image-name>` (requires JDK 25; regenerates `gradle.lockfile`)
+4. Review and commit the changes in `<image>/source/`, including the regenerated lockfile
 
 ### Testing Changes
 
-Before submitting patch or source changes:
+Before submitting patch, customization, or source changes:
 
 1. Dry-run each patch: `patch --dry-run -p1 < <patch-file>` (run from the extracted project root)
 2. If dry-run succeeds, run `.\update-project.ps1` and verify the output in `source/`
-3. Run `.\build.ps1 -Name <image>` to verify Docker image build
-4. Test the resulting Docker image with a real client app
+3. Iterate on tests directly with `./gradlew test` from `<image>/source/`
+4. Run `.\build.ps1 -Name <image>` to verify the Docker image build (it runs `test` first and fails if any test fails)
+5. Test the resulting Docker image with a real client app
 
 ## Patch Files
 
