@@ -42,10 +42,25 @@ tasks.named('test') {
 	useJUnitPlatform()
 }
 
+dependencyLocking {
+	lockAllConfigurations()
+}
+
 bootBuildImage {
-    createdDate = "now"
+    // Pin the builder and run image by digest so image contents are reproducible and
+    // base-image updates become an explicit, reviewable change rather than silent drift.
+    builder = "paketobuildpacks/builder-noble-java-tiny@sha256:38e94b8533e158f201f17d1ad733d47df75728f80b640c4ebc5b9f2ebe831601"
+    runImage = "paketobuildpacks/ubuntu-noble-run-tiny@sha256:941d6d5324318352f08bd8e3af2c80ab7822f250b88ae4ecc22299c5367887a6"
+    // A fixed creation timestamp keeps the image digest reproducible. CI overrides this with
+    // the commit timestamp via -PimageCreatedDate; the fixed epoch is the reproducible default.
+    createdDate = project.findProperty('imageCreatedDate') ?: '1980-01-01T00:00:00Z'
     environment = [
        "BP_SPRING_CLOUD_BINDINGS_DISABLED": "true",
        "BP_JVM_AOTCACHE_ENABLED": "true"
     ]
+}
+
+// Never build an image from code that fails its tests.
+tasks.named('bootBuildImage') {
+    dependsOn 'test'
 }
