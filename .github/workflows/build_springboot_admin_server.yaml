@@ -35,4 +35,5 @@ jobs:
       image: spring-boot-admin
       port: '9099'
       description: Spring Boot Admin Server
+      healthPath: '/'
     secrets: inherit

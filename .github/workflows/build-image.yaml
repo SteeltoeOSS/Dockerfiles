@@ -15,6 +15,11 @@ on:
         description: 'Human-readable image description for PR comments'
         required: true
         type: string
+      healthPath:
+        description: 'HTTP path polled by the container smoke test (Java images only)'
+        required: false
+        type: string
+        default: '/actuator/health'
 
 jobs:
   build-push:
@@ -27,9 +32,46 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    # Provide the JDK 25 toolchain explicitly (rather than relying on whatever the runner ships)
+    # and cache Gradle dependencies. Not needed for the UAA image, which is a plain docker build.
+    - name: Set up JDK 25
+      if: inputs.image != 'uaa-server'
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: '25'
+        cache: gradle
+
     - name: Build Image
       run: ./build.ps1 -Name '${{ inputs.image }}' -Registry '${{ env.REGISTRY }}' -Tag '${{ env.TAG }}'
       shell: pwsh
+
+    # Confirm the freshly built image actually starts and reports healthy before we push it.
+    - name: Smoke test image
+      if: inputs.image != 'uaa-server'
+      run: |
+        set -uo pipefail
+        image="${REGISTRY}/${{ inputs.image }}:${TAG}"
+        echo "Starting container from ${image}"
+        cid=$(docker run -d -p '${{ inputs.port }}:${{ inputs.port }}' "${image}")
+        url="http://localhost:${{ inputs.port }}${{ inputs.healthPath }}"
+        echo "Polling ${url}"
+        ok=false
+        for i in $(seq 1 60); do
+          code=$(curl -s -o /dev/null -w '%{http_code}' "${url}" || true)
+          echo "attempt ${i}: HTTP ${code}"
+          if [ "${code}" = "200" ]; then ok=true; break; fi
+          sleep 3
+        done
+        echo "----- container logs -----"
+        docker logs "${cid}" || true
+        docker rm -f "${cid}" >/dev/null 2>&1 || true
+        if [ "${ok}" != "true" ]; then
+          echo "Smoke test FAILED: ${url} did not return HTTP 200"
+          exit 1
+        fi
+        echo "Smoke test passed"
+      shell: bash
 
     - name: Login to container registry
       uses: docker/login-action@v3
