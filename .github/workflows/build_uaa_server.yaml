@@ -35,6 +35,5 @@ jobs:
     uses: ./.github/workflows/build-image.yaml
     with:
       image: uaa-server
-      port: '8080'
       description: UAA Server
     secrets: inherit

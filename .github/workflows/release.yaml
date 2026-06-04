@@ -45,6 +45,22 @@ jobs:
         fi
       shell: bash
 
+    - name: Read image config
+      id: config
+      if: steps.filter.outputs.skip != 'true'
+      shell: bash
+      run: |
+        echo "port=$(cat '${{ matrix.image }}/metadata/PORT' | tr -d '[:space:]')" >> $GITHUB_OUTPUT
+        echo "health_path=$(cat '${{ matrix.image }}/metadata/HEALTH_PATH' 2>/dev/null | tr -d '[:space:]' || echo '/actuator/health')" >> $GITHUB_OUTPUT
+
+    - name: Set up JDK 25
+      if: steps.filter.outputs.skip != 'true' && matrix.image != 'uaa-server'
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: '25'
+        cache: gradle
+
     - name: Login to container registry
       if: steps.filter.outputs.skip != 'true'
       uses: docker/login-action@v3
@@ -53,19 +69,56 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Build and Push
+    - name: Build
       if: steps.filter.outputs.skip != 'true'
+      id: build
       run: |
         $Version  = Get-Content "${{ matrix.image }}/metadata/IMAGE_VERSION"
         $Revision = (Get-Content "${{ matrix.image }}/metadata/IMAGE_REVISION" -ErrorAction SilentlyContinue | ForEach-Object { $_.Trim() }) -join ""
 
-        # When IMAGE_REVISION is set, the exact tag includes the suffix (e.g. 4.3.1-2).
+        # When IMAGE_REVISION is set, the exact tag includes the suffix (for example: 4.3.1-2).
         # The floating aliases (major.minor, major, latest) always track the highest revision.
-        $VersionTag  = if ($Revision) { "$Version-$Revision" } else { $Version }
-        $MajorMinor  = $Version.Split('.')[0..1] -join '.'
-        $Major       = $Version.Split('.')[0]
+        $VersionTag = if ($Revision) { "$Version-$Revision" } else { $Version }
 
         ./build.ps1 -Name '${{ matrix.image }}' -Registry '${{ env.REGISTRY }}' -Tag $VersionTag
+
+        echo "version_tag=$VersionTag" >> $env:GITHUB_OUTPUT
+        echo "version=$Version" >> $env:GITHUB_OUTPUT
+      shell: pwsh
+
+    - name: Smoke test image
+      if: steps.filter.outputs.skip != 'true'
+      run: |
+        set -uo pipefail
+        image="${REGISTRY}/${{ matrix.image }}:${{ steps.build.outputs.version_tag }}"
+        echo "Starting container from ${image}"
+        cid=$(docker run -d -p '${{ steps.config.outputs.port }}:${{ steps.config.outputs.port }}' "${image}")
+        url="http://localhost:${{ steps.config.outputs.port }}${{ steps.config.outputs.health_path }}"
+        echo "Polling ${url}"
+        ok=false
+        for i in $(seq 1 60); do
+          code=$(curl -s -o /dev/null -w '%{http_code}' "${url}" || true)
+          echo "attempt ${i}: HTTP ${code}"
+          if [ "${code}" = "200" ]; then ok=true; break; fi
+          sleep 3
+        done
+        echo "----- container logs -----"
+        docker logs "${cid}" || true
+        docker rm -f "${cid}" >/dev/null 2>&1 || true
+        if [ "${ok}" != "true" ]; then
+          echo "Smoke test FAILED: ${url} did not return HTTP 200"
+          exit 1
+        fi
+        echo "Smoke test passed"
+      shell: bash
+
+    - name: Push
+      if: steps.filter.outputs.skip != 'true'
+      run: |
+        $VersionTag = "${{ steps.build.outputs.version_tag }}"
+        $Version    = "${{ steps.build.outputs.version }}"
+        $MajorMinor = $Version.Split('.')[0..1] -join '.'
+        $Major      = $Version.Split('.')[0]
 
         $FullImage = "${{ env.REGISTRY }}/${{ matrix.image }}"
         docker tag "${FullImage}:${VersionTag}" "${FullImage}:${MajorMinor}"
@@ -76,5 +129,4 @@ jobs:
         docker push "${FullImage}:${MajorMinor}"
         docker push "${FullImage}:${Major}"
         docker push "${FullImage}:latest"
-
       shell: pwsh

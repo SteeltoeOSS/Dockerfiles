@@ -7,6 +7,7 @@ on:
     - '.github/workflows/build-image.yaml'
     - 'config-server/metadata/*'
     - 'config-server/patches/*'
+    - 'config-server/customizations/**'
     - 'config-server/source/**'
     - 'build.ps1'
   push:
@@ -17,6 +18,7 @@ on:
     - '.github/workflows/build-image.yaml'
     - 'config-server/metadata/*'
     - 'config-server/patches/*'
+    - 'config-server/customizations/**'
     - 'config-server/source/**'
     - 'build.ps1'
 
@@ -33,6 +35,5 @@ jobs:
     uses: ./.github/workflows/build-image.yaml
     with:
       image: config-server
-      port: '8888'
       description: Spring Cloud Config Server
     secrets: inherit

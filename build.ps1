@@ -111,9 +111,11 @@ try {
 
     if ($Tag) {
         $ImageNameWithTag = "$DockerOrg/${Name}:$Tag"
-    } elseif ($env:GITHUB_ACTIONS -eq "true") {
+    }
+    elseif ($env:GITHUB_ACTIONS -eq "true") {
         $ImageNameWithTag = "$DockerOrg/${Name}:$Version"
-    } else {
+    }
+    else {
         $ImageNameWithTag = "$DockerOrg/${Name}:dev"
     }
 
@@ -177,7 +179,8 @@ try {
             $wrapperPropertiesContent = Get-Content $wrapperPropertiesPath -Raw
             if ($wrapperPropertiesContent -match 'distributionUrl=.*gradle-(\d+(?:\.\d+)+)-') {
                 $gradleVersion = $Matches[1]
-            } else {
+            }
+            else {
                 throw "Could not determine Gradle version from $wrapperPropertiesPath"
             }
 

@@ -4,22 +4,13 @@ on:
   workflow_call:
     inputs:
       image:
-        description: 'Image name (e.g. config-server)'
-        required: true
-        type: string
-      port:
-        description: 'Container port exposed by the image'
+        description: 'Image name (for example: config-server)'
         required: true
         type: string
       description:
         description: 'Human-readable image description for PR comments'
         required: true
         type: string
-      healthPath:
-        description: 'HTTP path polled by the container smoke test (Java images only)'
-        required: false
-        type: string
-        default: '/actuator/health'
 
 jobs:
   build-push:
@@ -32,8 +23,13 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    # Provide the JDK 25 toolchain explicitly (rather than relying on whatever the runner ships)
-    # and cache Gradle dependencies. Not needed for the UAA image, which is a plain docker build.
+    - name: Read image config
+      id: config
+      shell: bash
+      run: |
+        echo "port=$(cat '${{ inputs.image }}/metadata/PORT' | tr -d '[:space:]')" >> $GITHUB_OUTPUT
+        echo "health_path=$(cat '${{ inputs.image }}/metadata/HEALTH_PATH' 2>/dev/null | tr -d '[:space:]' || echo '/actuator/health')" >> $GITHUB_OUTPUT
+
     - name: Set up JDK 25
       if: inputs.image != 'uaa-server'
       uses: actions/setup-java@v4
@@ -48,13 +44,12 @@ jobs:
 
     # Confirm the freshly built image actually starts and reports healthy before we push it.
     - name: Smoke test image
-      if: inputs.image != 'uaa-server'
       run: |
         set -uo pipefail
         image="${REGISTRY}/${{ inputs.image }}:${TAG}"
         echo "Starting container from ${image}"
-        cid=$(docker run -d -p '${{ inputs.port }}:${{ inputs.port }}' "${image}")
-        url="http://localhost:${{ inputs.port }}${{ inputs.healthPath }}"
+        cid=$(docker run -d -p '${{ steps.config.outputs.port }}:${{ steps.config.outputs.port }}' "${image}")
+        url="http://localhost:${{ steps.config.outputs.port }}${{ steps.config.outputs.health_path }}"
         echo "Polling ${url}"
         ok=false
         for i in $(seq 1 60); do
@@ -92,7 +87,7 @@ jobs:
           const body = `${marker}
           To run the ${{ inputs.description }} image built for this pull request:
           \`\`\`bash
-          docker run --rm -d --pull=always -p ${{ inputs.port }}:${{ inputs.port }} --name ${{ inputs.image }}-pr ${{ env.REGISTRY }}/${{ inputs.image }}:${{ env.TAG }}
+          docker run --rm -d --pull=always -p ${{ steps.config.outputs.port }}:${{ steps.config.outputs.port }} --name ${{ inputs.image }}-pr ${{ env.REGISTRY }}/${{ inputs.image }}:${{ env.TAG }}
           \`\`\``;
 
           const { data: comments } = await github.rest.issues.listComments({
