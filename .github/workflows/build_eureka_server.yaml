@@ -5,10 +5,8 @@ on:
     paths:
     - '.github/workflows/build_eureka_server.yaml'
     - '.github/workflows/build-image.yaml'
-    - 'eureka-server/metadata/*'
-    - 'eureka-server/patches/*'
-    - 'eureka-server/customizations/**'
-    - 'eureka-server/source/**'
+    - 'eureka-server/**'
+    - '!eureka-server/README.md'
     - 'build.ps1'
   push:
     branches:
@@ -16,10 +14,8 @@ on:
     paths:
     - '.github/workflows/build_eureka_server.yaml'
     - '.github/workflows/build-image.yaml'
-    - 'eureka-server/metadata/*'
-    - 'eureka-server/patches/*'
-    - 'eureka-server/customizations/**'
-    - 'eureka-server/source/**'
+    - 'eureka-server/**'
+    - '!eureka-server/README.md'
     - 'build.ps1'
 
 concurrency:
@@ -35,5 +31,5 @@ jobs:
     uses: ./.github/workflows/build-image.yaml
     with:
       image: eureka-server
-      description: Eureka Server
+      description: Spring Cloud Netflix Eureka Server
     secrets: inherit

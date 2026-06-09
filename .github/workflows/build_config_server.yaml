@@ -5,10 +5,8 @@ on:
     paths:
     - '.github/workflows/build_config_server.yaml'
     - '.github/workflows/build-image.yaml'
-    - 'config-server/metadata/*'
-    - 'config-server/patches/*'
-    - 'config-server/customizations/**'
-    - 'config-server/source/**'
+    - 'config-server/**'
+    - '!config-server/README.md'
     - 'build.ps1'
   push:
     branches:
@@ -16,10 +14,8 @@ on:
     paths:
     - '.github/workflows/build_config_server.yaml'
     - '.github/workflows/build-image.yaml'
-    - 'config-server/metadata/*'
-    - 'config-server/patches/*'
-    - 'config-server/customizations/**'
-    - 'config-server/source/**'
+    - 'config-server/**'
+    - '!config-server/README.md'
     - 'build.ps1'
 
 concurrency:

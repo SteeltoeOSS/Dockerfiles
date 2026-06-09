@@ -1,14 +1,19 @@
 #!/usr/bin/env pwsh
+#Requires -Version 7.4
 
 # =============================================================================
-# update-project.ps1: Regenerate image source from start.spring.io and apply patches
+# update-project.ps1: Regenerate image source from start.spring.io, apply
+#   patches and customizations, and update IMAGE_VERSION when a new dependency
+#   version is detected.
 # =============================================================================
 
 param (
+    [Parameter(ValueFromRemainingArguments = $true)]
     [String[]] $Names
 )
 
 $ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $true
 
 # Cache Initializr metadata for use with all images
 $script:InitializrMetadata = $null
@@ -24,7 +29,7 @@ function Get-InitializrMetadata {
             -TimeoutSec 10
     }
     catch {
-        Write-Host "  (Could not fetch Initializr metadata: $_)"
+        Write-Host "  (Could not fetch Initializr metadata: $_; version checks will be skipped)" -ForegroundColor DarkGray
     }
 
     return $script:InitializrMetadata
@@ -122,6 +127,9 @@ function Update-Project {
                 Write-Host "  Spring Boot $cleanBootVersion is current in the $bootVersionTrack track" -ForegroundColor Green
             }
         }
+        else {
+            Write-Host "  (No stable Spring Boot version found in the $bootVersionTrack track)" -ForegroundColor DarkGray
+        }
 
         $cleanDefaultVersion = $initializrMetadata.bootVersion.default -replace '\.RELEASE$', ''
         $defaultVersionTrack = ($cleanDefaultVersion -split '\.')[0..1] -join '.'
@@ -130,8 +138,10 @@ function Update-Project {
         }
     }
 
-    $temporaryDirectory = Join-Path $imagesDirectory "temp_update_$Name"
-    if (Test-Path $temporaryDirectory) { Remove-Item -Recurse -Force $temporaryDirectory }
+    $temporaryDirectory = Join-Path $imageDirectory "workspace"
+    if (Test-Path $temporaryDirectory) {
+        Remove-Item -Recurse -Force $temporaryDirectory
+    }
     New-Item -ItemType Directory -Path $temporaryDirectory | Out-Null
 
     try {
@@ -202,7 +212,9 @@ function Update-Project {
                         [xml]$bomPomDocument = Invoke-RestMethod -Uri "https://raw.githubusercontent.com/spring-cloud/spring-cloud-release/v$generatedBomVersion/spring-cloud-dependencies/pom.xml" -TimeoutSec 10
                         $artifactVersion = $bomPomDocument.project.properties.$bomPomPropertyName
                     }
-                    catch { }
+                    catch {
+                        Write-Host "  (Could not fetch BOM POM for $generatedBomVersion`: $_)" -ForegroundColor DarkGray
+                    }
 
                     if ($artifactVersion) {
                         if ($artifactVersion -ne $imageVersion) {
@@ -243,9 +255,10 @@ function Update-Project {
                         }
                     }
 
-                    $patchOutput = $patchContent | & patch -p1 2>&1
-                    if ($LASTEXITCODE -ne 0) {
-                        $patchOutput | ForEach-Object { Write-Host "  $_" }
+                    try {
+                        $patchContent | & patch -p1 2>&1 | ForEach-Object { Write-Host "  $_" }
+                    }
+                    catch {
                         throw "Patch $($patch.Name) failed"
                     }
                 }
@@ -313,9 +326,6 @@ function Update-Project {
             # Pipe stdout (verbose dependency tree) to Out-Null; stderr is not redirected so that
             # Gradle errors remain visible. Do not add 2>&1 here! Doing so would hide real failures.
             & $gradlewCommand --no-daemon --console=plain dependencies --write-locks | Out-Null
-            if ($LASTEXITCODE -ne 0) {
-                throw "Lockfile regeneration failed for $Name"
-            }
 
             # Drop the transient Gradle outputs from the lock run; they are not part of source.
             Remove-Item -Recurse -Force (Join-Path $sourceDirectory "build") -ErrorAction Ignore

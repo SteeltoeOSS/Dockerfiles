@@ -21,7 +21,9 @@ jobs:
       REGISTRY: ${{ vars.DOCKER_REGISTRY }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
 
     - name: Read image config
       id: config
@@ -32,17 +34,16 @@ jobs:
 
     - name: Set up JDK 25
       if: inputs.image != 'uaa-server'
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v5
       with:
         distribution: temurin
         java-version: '25'
         cache: gradle
 
-    - name: Build Image
+    - name: Build image
       run: ./build.ps1 -Name '${{ inputs.image }}' -Registry '${{ env.REGISTRY }}' -Tag '${{ env.TAG }}'
       shell: pwsh
 
-    # Confirm the freshly built image actually starts and reports healthy before we push it.
     - name: Smoke test image
       run: |
         set -uo pipefail
@@ -69,7 +70,7 @@ jobs:
       shell: bash
 
     - name: Login to container registry
-      uses: docker/login-action@v3
+      uses: docker/login-action@v4
       with:
         registry: ${{ env.REGISTRY }}
         username: ${{ secrets.DOCKER_USERNAME }}
@@ -79,7 +80,7 @@ jobs:
       run: docker push ${{ env.REGISTRY }}/${{ inputs.image }}:${{ env.TAG }}
 
     - name: Post or update PR comment with image run instructions
-      uses: actions/github-script@v7
+      uses: actions/github-script@v9
       if: ${{ github.event_name == 'pull_request' }}
       with:
         script: |

@@ -5,10 +5,8 @@ on:
     paths:
     - '.github/workflows/build_uaa_server.yaml'
     - '.github/workflows/build-image.yaml'
-    - 'uaa-server/Dockerfile'
-    - 'uaa-server/metadata/*'
-    - 'uaa-server/*.yml'
-    - 'uaa-server/*.properties'
+    - 'uaa-server/**'
+    - '!uaa-server/README.md'
     - 'build.ps1'
   push:
     branches:
@@ -16,10 +14,8 @@ on:
     paths:
     - '.github/workflows/build_uaa_server.yaml'
     - '.github/workflows/build-image.yaml'
-    - 'uaa-server/Dockerfile'
-    - 'uaa-server/metadata/*'
-    - 'uaa-server/*.yml'
-    - 'uaa-server/*.properties'
+    - 'uaa-server/**'
+    - '!uaa-server/README.md'
     - 'build.ps1'
 
 concurrency:
