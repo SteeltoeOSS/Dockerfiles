@@ -41,10 +41,11 @@ jobs:
         cache: gradle
 
     - name: Build image
-      run: ./build.ps1 -Name '${{ inputs.image }}' -Registry '${{ env.REGISTRY }}' -Tag '${{ env.TAG }}'
       shell: pwsh
+      run: ./build.ps1 -Name '${{ inputs.image }}' -Registry '${{ env.REGISTRY }}' -Tag '${{ env.TAG }}'
 
     - name: Smoke test image
+      shell: bash
       run: |
         set -uo pipefail
         image="${REGISTRY}/${{ inputs.image }}:${TAG}"
@@ -67,7 +68,6 @@ jobs:
           exit 1
         fi
         echo "Smoke test passed"
-      shell: bash
 
     - name: Login to container registry
       uses: docker/login-action@v4

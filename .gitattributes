@@ -18,6 +18,3 @@
 # so keep them LF to avoid introducing CRLF when regenerating on Windows.
 **/customizations/build.gradle.append text eol=lf
 **/customizations/overlay/**/*.java   text eol=lf
-
-# Mark committed source as auto-generated so GitHub collapses it in PR diffs by default.
-**/source/**  linguist-generated=true
