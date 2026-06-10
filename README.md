@@ -7,7 +7,7 @@ GitHub repo for server images to use for local development with SteeltoeOSS.
 | Name | Description |
 | ---- | ----------- |
 | [steeltoe.azurecr.io/config-server](config-server/) | Spring Cloud Config Server |
-| [steeltoe.azurecr.io/eureka-server](eureka-server/) | Netflix Eureka Server |
+| [steeltoe.azurecr.io/eureka-server](eureka-server/) | Spring Cloud Netflix Eureka Server |
 | [steeltoe.azurecr.io/spring-boot-admin](spring-boot-admin/) | Spring Boot Admin |
 | [steeltoe.azurecr.io/uaa-server](uaa-server/) | Cloud Foundry UAA Server |
 

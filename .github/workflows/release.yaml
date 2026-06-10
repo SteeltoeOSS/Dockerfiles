@@ -33,11 +33,12 @@ jobs:
         image: [config-server, eureka-server, spring-boot-admin, uaa-server]
 
     steps:
-    - uses: actions/checkout@v6
+    - name: Git checkout
+      uses: actions/checkout@v6
       with:
         persist-credentials: false
 
-    - name: Filter Matrix
+    - name: Filter matrix
       id: filter
       shell: bash
       run: |
