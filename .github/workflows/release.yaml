@@ -48,14 +48,6 @@ jobs:
           echo "skip=false" >> $GITHUB_OUTPUT
         fi
 
-    - name: Read image config
-      id: config
-      if: steps.filter.outputs.skip != 'true'
-      shell: bash
-      run: |
-        echo "port=$(cat '${{ matrix.image }}/metadata/PORT' | tr -d '[:space:]')" >> $GITHUB_OUTPUT
-        echo "health_path=$(cat '${{ matrix.image }}/metadata/HEALTH_PATH' 2>/dev/null | tr -d '[:space:]' || echo '/actuator/health')" >> $GITHUB_OUTPUT
-
     - name: Set up JDK 25
       if: steps.filter.outputs.skip != 'true' && matrix.image != 'uaa-server'
       uses: actions/setup-java@v5
@@ -74,7 +66,11 @@ jobs:
 
         # When IMAGE_REVISION is set, the exact tag includes the suffix (for example: 4.3.1-2).
         # The floating aliases (major.minor, major, latest) always track the highest revision.
-        $versionTag = if ($revision) { "$version-$revision" } else { $version }
+        if ($revision) {
+            $versionTag = "$version-$revision"
+        } else {
+            $versionTag = $version
+        }
 
         ./build.ps1 -Name '${{ matrix.image }}' -Registry '${{ env.REGISTRY }}' -Tag $versionTag
 
@@ -83,29 +79,8 @@ jobs:
 
     - name: Smoke test image
       if: steps.filter.outputs.skip != 'true'
-      shell: bash
-      run: |
-        set -uo pipefail
-        image="${REGISTRY}/${{ matrix.image }}:${{ steps.build.outputs.version_tag }}"
-        echo "Starting container from ${image}"
-        cid=$(docker run -d -p '${{ steps.config.outputs.port }}:${{ steps.config.outputs.port }}' "${image}")
-        url="http://localhost:${{ steps.config.outputs.port }}${{ steps.config.outputs.health_path }}"
-        echo "Polling ${url}"
-        ok=false
-        for i in $(seq 1 60); do
-          code=$(curl -s -o /dev/null -w '%{http_code}' "${url}" || true)
-          echo "attempt ${i}: HTTP ${code}"
-          if [ "${code}" = "200" ]; then ok=true; break; fi
-          sleep 3
-        done
-        echo "----- container logs -----"
-        docker logs "${cid}" || true
-        docker rm -f "${cid}" >/dev/null 2>&1 || true
-        if [ "${ok}" != "true" ]; then
-          echo "Smoke test FAILED: ${url} did not return HTTP 200"
-          exit 1
-        fi
-        echo "Smoke test passed"
+      shell: pwsh
+      run: ./smoke-test.ps1 -Name '${{ matrix.image }}' -Registry '${{ env.REGISTRY }}' -Tag '${{ steps.build.outputs.version_tag }}'
 
     - name: Login to container registry
       if: steps.filter.outputs.skip != 'true'

@@ -29,9 +29,7 @@ jobs:
     - name: Read image config
       id: config
       shell: bash
-      run: |
-        echo "port=$(cat '${{ inputs.image }}/metadata/PORT' | tr -d '[:space:]')" >> $GITHUB_OUTPUT
-        echo "health_path=$(cat '${{ inputs.image }}/metadata/HEALTH_PATH' 2>/dev/null | tr -d '[:space:]' || echo '/actuator/health')" >> $GITHUB_OUTPUT
+      run: echo "port=$(cat '${{ inputs.image }}/metadata/PORT' | tr -d '[:space:]')" >> $GITHUB_OUTPUT
 
     - name: Set up JDK 25
       if: inputs.image != 'uaa-server'
@@ -46,29 +44,8 @@ jobs:
       run: ./build.ps1 -Name '${{ inputs.image }}' -Registry '${{ env.REGISTRY }}' -Tag '${{ env.TAG }}'
 
     - name: Smoke test image
-      shell: bash
-      run: |
-        set -uo pipefail
-        image="${REGISTRY}/${{ inputs.image }}:${TAG}"
-        echo "Starting container from ${image}"
-        cid=$(docker run -d -p '${{ steps.config.outputs.port }}:${{ steps.config.outputs.port }}' "${image}")
-        url="http://localhost:${{ steps.config.outputs.port }}${{ steps.config.outputs.health_path }}"
-        echo "Polling ${url}"
-        ok=false
-        for i in $(seq 1 60); do
-          code=$(curl -s -o /dev/null -w '%{http_code}' "${url}" || true)
-          echo "attempt ${i}: HTTP ${code}"
-          if [ "${code}" = "200" ]; then ok=true; break; fi
-          sleep 3
-        done
-        echo "----- container logs -----"
-        docker logs "${cid}" || true
-        docker rm -f "${cid}" >/dev/null 2>&1 || true
-        if [ "${ok}" != "true" ]; then
-          echo "Smoke test FAILED: ${url} did not return HTTP 200"
-          exit 1
-        fi
-        echo "Smoke test passed"
+      shell: pwsh
+      run: ./smoke-test.ps1 -Name '${{ inputs.image }}' -Registry '${{ env.REGISTRY }}' -Tag '${{ env.TAG }}'
 
     - name: Login to container registry
       uses: docker/login-action@v4

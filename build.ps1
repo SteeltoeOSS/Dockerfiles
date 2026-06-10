@@ -37,6 +37,9 @@
 
     .PARAMETER Registry
     Set the container registry. Defaults to steeltoe.azurecr.io.
+
+    .PARAMETER SmokeTest
+    After building, run smoke-test.ps1 to start the image and verify the health endpoint returns HTTP 200.
 #>
 
 # -----------------------------------------------------------------------------
@@ -47,6 +50,7 @@ param (
     [Switch] $Help,
     [Switch] $List,
     [Switch] $DisableCache,
+    [Switch] $SmokeTest,
     [String] $Name,
     [String] $Tag,
     [String] $Registry
@@ -238,6 +242,11 @@ try {
         finally {
             Pop-Location  # workspace
         }
+    }
+
+    if ($SmokeTest) {
+        $resolvedTag = ($ImageNameWithTag -split ':')[-1]
+        & "$ImagesDirectory/smoke-test.ps1" -Name $Name -Registry $DockerOrg -Tag $resolvedTag
     }
 }
 catch {

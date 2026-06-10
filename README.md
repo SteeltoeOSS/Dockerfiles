@@ -99,8 +99,9 @@ docker images
 Run `update-project.ps1` to regenerate `source/` from start.spring.io and apply all patches and customizations:
 
 ```shell
-.\update-project.ps1                       # update all Java images
-.\update-project.ps1 -Names config-server  # update one image
+.\update-project.ps1                                     # update all Java images
+.\update-project.ps1 -Names config-server                # update one image
+.\update-project.ps1 -Names config-server,eureka-server  # update multiple images
 ```
 
 **Requires** JDK 25 and network access (resolves dependencies to regenerate `gradle.lockfile`). Also requires `patch` in your PATH (installed with Git for Windows).

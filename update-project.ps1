@@ -8,7 +8,6 @@
 # =============================================================================
 
 param (
-    [Parameter(ValueFromRemainingArguments = $true)]
     [String[]] $Names
 )
 
@@ -29,7 +28,8 @@ function Get-InitializrMetadata {
             -TimeoutSec 10
     }
     catch {
-        Write-Host "  (Could not fetch Initializr metadata: $_; version checks will be skipped)" -ForegroundColor DarkGray
+        Write-Host "  (Could not fetch Initializr metadata; version checks will be skipped)" -ForegroundColor DarkGray
+        Write-Host "  (error: $($_.Message))" -ForegroundColor DarkGray
     }
 
     return $script:InitializrMetadata
@@ -58,8 +58,7 @@ function Update-Project {
     $imageDirectory  = Join-Path $imagesDirectory $Name
 
     if (!(Test-Path $imageDirectory)) {
-        Write-Error "Unknown image $Name"
-        return
+        throw "Unknown image $Name"
     }
 
     if ($Name -eq "uaa-server") {
@@ -83,8 +82,7 @@ function Update-Project {
             $dependencies    = "codecentric-spring-boot-admin-server"
         }
         Default {
-            Write-Error "$Name is not supported for auto-generation"
-            return
+            throw "$Name is not supported for auto-generation"
         }
     }
 
@@ -93,8 +91,7 @@ function Update-Project {
         $imageVersion = Get-Content (Join-Path $imageDirectory "metadata" "IMAGE_VERSION")
     }
     else {
-        Write-Error "No metadata found for $Name"
-        return
+        throw "No metadata found for $Name"
     }
 
     $serverName = $Name -replace '-', ''
@@ -138,14 +135,14 @@ function Update-Project {
         }
     }
 
-    $temporaryDirectory = Join-Path $imageDirectory "workspace"
-    if (Test-Path $temporaryDirectory) {
-        Remove-Item -Recurse -Force $temporaryDirectory
+    $workspaceDirectory = Join-Path $imageDirectory "workspace"
+    if (Test-Path $workspaceDirectory) {
+        Remove-Item -Recurse -Force $workspaceDirectory
     }
-    New-Item -ItemType Directory -Path $temporaryDirectory | Out-Null
+    New-Item -ItemType Directory -Path $workspaceDirectory | Out-Null
 
     try {
-        Push-Location $temporaryDirectory
+        Push-Location $workspaceDirectory
 
         Write-Host "Downloading from start.spring.io..."
         Invoke-WebRequest `
@@ -166,16 +163,24 @@ function Update-Project {
             } `
             -OutFile "$serverName.zip"
 
-        $extractionRoot = Join-Path $temporaryDirectory "extracted"
+        $extractionRoot = Join-Path $workspaceDirectory "extracted"
         New-Item -ItemType Directory -Path $extractionRoot | Out-Null
         Expand-Archive -Path "$serverName.zip" -DestinationPath $extractionRoot -Force
 
-        $extractedItems     = Get-ChildItem -Path $extractionRoot
-        $extractionDirectory = if ($extractedItems.Count -eq 1 -and $extractedItems[0].PSIsContainer) { $extractedItems[0].FullName } else { $extractionRoot }
+        $extractedItems = Get-ChildItem -Path $extractionRoot
+        if ($extractedItems.Count -eq 1 -and $extractedItems[0].PSIsContainer) {
+            $extractionDirectory = $extractedItems[0].FullName
+        } else {
+            $extractionDirectory = $extractionRoot
+        }
 
         # Compare BOM version from the freshly-generated build.gradle against the committed source.
         # BOM key: springCloudVersion for config/eureka (BOM != artifact), springBootAdminVersion for SBA (BOM = artifact)
-        $bomVersionKey = if ($Name -eq "spring-boot-admin") { "springBootAdminVersion" } else { "springCloudVersion" }
+        if ($Name -eq "spring-boot-admin") {
+            $bomVersionKey = "springBootAdminVersion"
+        } else {
+            $bomVersionKey = "springCloudVersion"
+        }
 
         $generatedBuildContent = Get-Content (Join-Path $extractionDirectory "build.gradle") -Raw -ErrorAction SilentlyContinue
         $committedBuildContent = Get-Content (Join-Path $imageDirectory "source" "build.gradle") -Raw -ErrorAction SilentlyContinue
@@ -196,7 +201,11 @@ function Update-Project {
                         Set-Content (Join-Path $imageDirectory "metadata" "IMAGE_VERSION") $generatedBomVersion
                         Set-Content (Join-Path $imageDirectory "metadata" "IMAGE_REVISION") ""
                         $imageVersion = $generatedBomVersion
-                        $versionChangeNote = if ($bomVersionChanged) { " (BOM $committedBomVersion -> $generatedBomVersion)" } else { " (was $previousVersion)" }
+                        if ($bomVersionChanged) {
+                            $versionChangeNote = " (BOM $committedBomVersion -> $generatedBomVersion)"
+                        } else {
+                            $versionChangeNote = " (was $previousVersion)"
+                        }
                         Write-Host "  [UPDATED] IMAGE_VERSION -> $generatedBomVersion$versionChangeNote" -ForegroundColor Green
                     }
                     else {
@@ -206,14 +215,19 @@ function Update-Project {
                 else {
                     # Spring Cloud release train (for example: 2025.0.2) does not equal the artifact version;
                     # resolve it from the Spring Cloud BOM POM on GitHub.
-                    $bomPomPropertyName = if ($Name -eq "eureka-server") { "spring-cloud-netflix.version" } else { "spring-cloud-config.version" }
+                    if ($Name -eq "eureka-server") {
+                        $bomPomPropertyName = "spring-cloud-netflix.version"
+                    } else {
+                        $bomPomPropertyName = "spring-cloud-config.version"
+                    }
                     $artifactVersion = $null
                     try {
                         [xml]$bomPomDocument = Invoke-RestMethod -Uri "https://raw.githubusercontent.com/spring-cloud/spring-cloud-release/v$generatedBomVersion/spring-cloud-dependencies/pom.xml" -TimeoutSec 10
                         $artifactVersion = $bomPomDocument.project.properties.$bomPomPropertyName
                     }
                     catch {
-                        Write-Host "  (Could not fetch BOM POM for $generatedBomVersion`: $_)" -ForegroundColor DarkGray
+                        Write-Host "  (Could not fetch BOM POM for $generatedBomVersion; IMAGE_VERSION check skipped)" -ForegroundColor DarkGray
+                        Write-Host "  (error: $($_.Message))" -ForegroundColor DarkGray
                     }
 
                     if ($artifactVersion) {
@@ -222,20 +236,35 @@ function Update-Project {
                             Set-Content (Join-Path $imageDirectory "metadata" "IMAGE_VERSION") $artifactVersion
                             Set-Content (Join-Path $imageDirectory "metadata" "IMAGE_REVISION") ""
                             $imageVersion = $artifactVersion
-                            $bomVersionNote = if ($bomVersionChanged) { " (BOM $committedBomVersion -> $generatedBomVersion)" } else { " (was $previousVersion)" }
+                            if ($bomVersionChanged) {
+                                $bomVersionNote = " (BOM $committedBomVersion -> $generatedBomVersion)"
+                            } else {
+                                $bomVersionNote = " (was $previousVersion)"
+                            }
                             Write-Host "  [UPDATED] IMAGE_VERSION -> $artifactVersion via $bomPomPropertyName$bomVersionNote" -ForegroundColor Green
                         }
                         else {
-                            $bomVersionNote = if ($bomVersionChanged) { " (BOM $committedBomVersion -> $generatedBomVersion)" } else { "" }
+                            if ($bomVersionChanged) {
+                                $bomVersionNote = " (BOM $committedBomVersion -> $generatedBomVersion)"
+                            } else {
+                                $bomVersionNote = ""
+                            }
                             Write-Host "  $bomVersionKey`: $generatedBomVersion  IMAGE_VERSION: $imageVersion (in sync)$bomVersionNote" -ForegroundColor Green
                         }
                     }
                     else {
-                        $statusMessage = if ($bomVersionChanged) { "[BOM CHANGED] $bomVersionKey`: $committedBomVersion -> $generatedBomVersion" } else { "$bomVersionKey`: $generatedBomVersion" }
+                        if ($bomVersionChanged) {
+                            $statusMessage = "[BOM CHANGED] $bomVersionKey`: $committedBomVersion -> $generatedBomVersion"
+                        } else {
+                            $statusMessage = "$bomVersionKey`: $generatedBomVersion"
+                        }
                         Write-Host "  $statusMessage  IMAGE_VERSION: $imageVersion  (BOM fetch failed)" -ForegroundColor Yellow
                         Write-Host "  Check $bomPomPropertyName in: https://github.com/spring-cloud/spring-cloud-release/blob/v$generatedBomVersion/spring-cloud-dependencies/pom.xml" -ForegroundColor Cyan
                     }
                 }
+            }
+            else {
+                Write-Host "  ($bomVersionKey not found in generated build.gradle; version check skipped)" -ForegroundColor DarkGray
             }
         }
 
@@ -322,7 +351,11 @@ function Update-Project {
             if ($IsLinux -or $IsMacOS) {
                 & chmod +x gradlew
             }
-            $gradlewCommand = if ($IsWindows) { ".\gradlew.bat" } else { "./gradlew" }
+            if ($IsWindows) {
+                $gradlewCommand = ".\gradlew.bat"
+            } else {
+                $gradlewCommand = "./gradlew"
+            }
             # Pipe stdout (verbose dependency tree) to Out-Null; stderr is not redirected so that
             # Gradle errors remain visible. Do not add 2>&1 here! Doing so would hide real failures.
             & $gradlewCommand --no-daemon --console=plain dependencies --write-locks | Out-Null
@@ -343,9 +376,9 @@ function Update-Project {
     }
     finally {
         Set-Location $imagesDirectory
-        if (Test-Path $temporaryDirectory) {
+        if (Test-Path $workspaceDirectory) {
             Start-Sleep -Milliseconds 500
-            Remove-Item -Recurse -Force $temporaryDirectory
+            Remove-Item -Recurse -Force $workspaceDirectory
         }
     }
 }
@@ -384,8 +417,12 @@ if ($firstAppend) {
     Write-Host ""
 }
 
-# Wrap in @() so a single -Names value stays an array (prevent iterating on the characters in the name).
-$imageNames = @(if ($Names) { $Names } else { @("config-server", "eureka-server", "spring-boot-admin") })
+# @() ensures a single value stays an array (prevents iterating over characters of the name).
+if ($Names) {
+    $imageNames = @($Names)
+} else {
+    $imageNames = @("config-server", "eureka-server", "spring-boot-admin")
+}
 
 for ($index = 0; $index -lt $imageNames.Count; $index++) {
     Update-Project -Name $imageNames[$index]

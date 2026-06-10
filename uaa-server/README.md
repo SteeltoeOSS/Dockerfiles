@@ -1,4 +1,4 @@
-# UAA Server for Steeltoe Samples
+# steeltoe.azurecr.io/uaa-server
 
 This directory contains resources for building a [CloudFoundry User Account and Authentication (UAA)](https://github.com/cloudfoundry/uaa) Docker image that is customized to work with [Steeltoe Samples](https://github.com/SteeltoeOSS/Samples).
 
