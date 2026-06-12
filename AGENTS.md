@@ -1,59 +1,48 @@
-# Agent Instructions and Reminders
+# Agent Instructions
 
-This file contains important reminders and guidelines for AI agents working on this codebase.
+See [README.md](README.md) for the full architecture, build flow, and maintenance workflows. This file covers agent-specific concerns only.
 
-## Build Script
+## Critical Rules
 
-### Avoid `-DisableCache` Flag
-
-**Do NOT use `-DisableCache`** when running `build.ps1` from agentic contexts. The `start.spring.io` service may block or rate-limit automated traffic, causing connection failures.
-
-Instead, to get a fresh build:
-
-1. Delete the expanded project folder (e.g., `workspace/springbootadmin/`)
-2. Run `.\build.ps1 <image-name>` without the flag
-
-### Testing Changes
-
-Before submitting patch changes:
-
-1. Run a dry-run of each patch: `git apply --check <patch-file>`
-2. If dry-run succeeds, run the full build and verify Java compilation
-3. Test the resulting Docker image with a real client app
+- **Never edit `source/` directly.** It is fully overwritten by `update-project.ps1`. All substantive changes go in `patches/` or `customizations/`, then regenerate with `update-project.ps1`.
+- **Never use `-DisableCache`** when running `build.ps1` from agentic contexts. It is effectively a no-op for Java images (source is committed) and risks triggering rate-limiting on start.spring.io for the UAA server.
 
 ## Patch Files
 
-The build script uses `git apply --unidiff-zero --recount --ignore-whitespace` to apply patches, which is more forgiving than the traditional `patch` command.
+Patches are applied by `update-project.ps1` using `patch -p1`, run from inside the extracted project directory. See [README.md § Architecture](README.md#architecture) for when to use a patch vs a customization.
 
 ### Patch Format Rules
 
-1. **Hunk headers should be accurate**: The format is `@@ -old_start,old_count +new_start,new_count @@`
-   - `old_count` is the number of lines in the hunk from the old file (context lines plus lines with `-` prefix)
-   - `new_count` is the number of lines in the hunk in the new file (context lines plus lines with `+` prefix)
-   - For new file patches (`--- /dev/null`), `old_count` is 0 and `new_count` is the total number of lines in the new-file hunk
-   - Note: `--recount` will automatically correct line counts, but keeping them accurate is still good practice
-2. **Trailing newlines are required**: Patch files must end with a newline character.
-3. **Preserve exact whitespace**: Context lines must match the target file exactly, including trailing spaces and tabs. The `--ignore-whitespace` flag provides some tolerance but exact matches are preferred.
-4. **New file patches**: Use `/dev/null` as the old file:
+Agents frequently get hunk counts wrong. The format is:
 
-   ```diff
-   --- /dev/null
-   +++ ./path/to/NewFile.java	2026-01-27 00:00:00.000000000 +0000
-   @@ -0,0 +1,N @@
-   +line 1
-   +line 2
-   ...
-   ```
-
-### Example
-
-If a patch adds 1 line, the hunk header should reflect this:
-
-```diff
--@@ -37,3 +37,10 @@
-+@@ -37,3 +37,11 @@
+```
+@@ -old_start,old_count +new_start,new_count @@
 ```
 
-### Why This Matters
+- `old_count` = context lines + lines with a `-` prefix
+- `new_count` = context lines + lines with a `+` prefix
+- For new content in an (effectively) empty file: `@@ -0,0 +1,N @@`
 
-While `git apply --recount` can fix minor line count issues, keeping patches accurate ensures reliable application and easier debugging.
+`patch -p1` does not auto-correct wrong counts — incorrect headers cause patch failures.
+
+**Trailing newlines are required.** Patch files must end with a newline character.
+
+**Preserve exact whitespace.** Context lines must match the target file exactly.
+
+**Path prefix with `-p1`:** Patches use paths like `configserver/src/...`; with `-p1` the applied path becomes `src/...`, matching the project layout.
+
+### Example — Adding Lines
+
+If a patch adds 2 lines to a 3-line context block:
+
+```diff
+-@@ -37,3 +37,3 @@
++@@ -37,3 +37,5 @@
+ context line 1
+ context line 2
+ context line 3
++added line 1
++added line 2
+```
+
+`old_count = 3` (context), `new_count = 5` (3 context + 2 added).

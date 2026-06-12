@@ -1,4 +1,4 @@
-# steeltoeoss/spring-boot-admin
+# steeltoe.azurecr.io/spring-boot-admin
 
 Image for SteeltoeOSS local development with <https://github.com/codecentric/spring-boot-admin>.
 

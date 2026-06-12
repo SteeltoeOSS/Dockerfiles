@@ -1,0 +1,110 @@
+name: Release Images
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      image:
+        description: 'Image to release (all if empty)'
+        required: false
+        type: choice
+        options:
+        - all
+        - config-server
+        - eureka-server
+        - spring-boot-admin
+        - uaa-server
+        default: all
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ${{ vars.DOCKER_REGISTRY }}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [config-server, eureka-server, spring-boot-admin, uaa-server]
+
+    steps:
+    - name: Git checkout
+      uses: actions/checkout@v6
+      with:
+        persist-credentials: false
+
+    - name: Filter matrix
+      id: filter
+      shell: bash
+      run: |
+        if [[ "${{ inputs.image }}" != "" && "${{ inputs.image }}" != "all" && "${{ inputs.image }}" != "${{ matrix.image }}" ]]; then
+          echo "skip=true" >> $GITHUB_OUTPUT
+        else
+          echo "skip=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Set up JDK 25
+      if: steps.filter.outputs.skip != 'true' && matrix.image != 'uaa-server'
+      uses: actions/setup-java@v5
+      with:
+        distribution: temurin
+        java-version: '25'
+        cache: gradle
+
+    - name: Build image
+      if: steps.filter.outputs.skip != 'true'
+      id: build
+      shell: pwsh
+      run: |
+        $version  = Get-Content "${{ matrix.image }}/metadata/IMAGE_VERSION"
+        $revision = (Get-Content "${{ matrix.image }}/metadata/IMAGE_REVISION" -ErrorAction SilentlyContinue | ForEach-Object { $_.Trim() }) -join ""
+
+        # When IMAGE_REVISION is set, the exact tag includes the suffix (for example: 4.3.1-2).
+        # The floating aliases (major.minor, major, latest) always track the highest revision.
+        if ($revision) {
+            $versionTag = "$version-$revision"
+        } else {
+            $versionTag = $version
+        }
+
+        ./build.ps1 -Name '${{ matrix.image }}' -Registry '${{ env.REGISTRY }}' -Tag $versionTag
+
+        echo "version_tag=$versionTag" >> $env:GITHUB_OUTPUT
+        echo "version=$version" >> $env:GITHUB_OUTPUT
+
+    - name: Smoke test image
+      if: steps.filter.outputs.skip != 'true'
+      shell: pwsh
+      run: ./smoke-test.ps1 -Name '${{ matrix.image }}' -Registry '${{ env.REGISTRY }}' -Tag '${{ steps.build.outputs.version_tag }}'
+
+    - name: Login to container registry
+      if: steps.filter.outputs.skip != 'true'
+      uses: docker/login-action@v4
+      with:
+        registry: ${{ vars.DOCKER_REGISTRY }}
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Push image
+      if: steps.filter.outputs.skip != 'true'
+      shell: pwsh
+      run: |
+        $versionTag = "${{ steps.build.outputs.version_tag }}"
+        $version    = "${{ steps.build.outputs.version }}"
+        $majorMinor = $version.Split('.')[0..1] -join '.'
+        $major      = $version.Split('.')[0]
+
+        $fullImage = "${{ env.REGISTRY }}/${{ matrix.image }}"
+        docker tag "${fullImage}:${versionTag}" "${fullImage}:${majorMinor}"
+        docker tag "${fullImage}:${versionTag}" "${fullImage}:${major}"
+        docker tag "${fullImage}:${versionTag}" "${fullImage}:latest"
+
+        docker push "${fullImage}:${versionTag}"
+        docker push "${fullImage}:${majorMinor}"
+        docker push "${fullImage}:${major}"
+        docker push "${fullImage}:latest"

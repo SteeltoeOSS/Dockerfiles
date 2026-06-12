@@ -1,0 +1,97 @@
+name: Build Image
+
+on:
+  workflow_call:
+    inputs:
+      image:
+        description: 'Image name (for example: config-server)'
+        required: true
+        type: string
+      description:
+        description: 'Human-readable image description for PR comments'
+        required: true
+        type: string
+
+jobs:
+  build-push:
+    name: Build and push image
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || 'edge' }}
+      REGISTRY: ${{ vars.DOCKER_REGISTRY }}
+
+    steps:
+    - name: Git checkout
+      uses: actions/checkout@v6
+      with:
+        persist-credentials: false
+
+    - name: Read image config
+      id: config
+      shell: bash
+      run: echo "port=$(cat '${{ inputs.image }}/metadata/PORT' | tr -d '[:space:]')" >> $GITHUB_OUTPUT
+
+    - name: Set up JDK 25
+      if: inputs.image != 'uaa-server'
+      uses: actions/setup-java@v5
+      with:
+        distribution: temurin
+        java-version: '25'
+        cache: gradle
+
+    - name: Build image
+      shell: pwsh
+      run: ./build.ps1 -Name '${{ inputs.image }}' -Registry '${{ env.REGISTRY }}' -Tag '${{ env.TAG }}'
+
+    - name: Smoke test image
+      shell: pwsh
+      run: ./smoke-test.ps1 -Name '${{ inputs.image }}' -Registry '${{ env.REGISTRY }}' -Tag '${{ env.TAG }}'
+
+    - name: Login to container registry
+      uses: docker/login-action@v4
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Push image
+      run: docker push ${{ env.REGISTRY }}/${{ inputs.image }}:${{ env.TAG }}
+
+    - name: Post or update PR comment with image run instructions
+      uses: actions/github-script@v9
+      if: ${{ github.event_name == 'pull_request' }}
+      with:
+        script: |
+          const marker = '<!-- IMAGE_INSTRUCTIONS_${{ inputs.image }} -->';
+          const body = `${marker}
+          To run the ${{ inputs.description }} image built for this pull request:
+          \`\`\`bash
+          docker run --rm -d --pull=always -p ${{ steps.config.outputs.port }}:${{ steps.config.outputs.port }} --name ${{ inputs.image }}-pr ${{ env.REGISTRY }}/${{ inputs.image }}:${{ env.TAG }}
+          \`\`\``;
+
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+            per_page: 100,
+          });
+
+          const existingComment = comments.find(comment =>
+            comment.user.login === 'github-actions[bot]' && comment.body.startsWith(marker)
+          );
+
+          if (existingComment) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: existingComment.id,
+              body: body,
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body,
+            });
+          }

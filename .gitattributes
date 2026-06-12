@@ -1,2 +1,20 @@
 # Patches are applied on files extracted from a downloaded zip file. All these files use LF line endings.
 *.patch text eol=lf
+
+# Spring Initializr generates source files with LF line endings (Linux server).
+# Explicit rules here prevent unexpected diffs when update-project.ps1 regenerates source on Windows,
+# where core.autocrlf would otherwise convert committed files to CRLF on checkout.
+**/source/**/*.java     text eol=lf
+**/source/**/*.gradle   text eol=lf
+**/source/**/*.properties text eol=lf
+**/source/**/*.md       text eol=lf
+**/source/**/*.txt      text eol=lf
+**/source/**/*.xml      text eol=lf
+**/source/**/gradlew    text eol=lf
+**/source/**/gradlew.bat text eol=crlf
+**/source/**/*.jar      binary
+
+# Customizations are appended/overlaid onto the generated (LF) source by update-project.ps1,
+# so keep them LF to avoid introducing CRLF when regenerating on Windows.
+**/customizations/build.gradle.append text eol=lf
+**/customizations/overlay/**/*.java   text eol=lf

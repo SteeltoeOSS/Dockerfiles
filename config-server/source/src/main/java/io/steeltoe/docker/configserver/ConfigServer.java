@@ -1,0 +1,23 @@
+package io.steeltoe.docker.configserver;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.config.server.EnableConfigServer;
+
+@SpringBootApplication
+@EnableConfigServer
+@EnableDiscoveryClient
+public class ConfigServer {
+
+	private static final Logger logger = LoggerFactory.getLogger(ConfigServer.class);
+
+	public static void main(String[] args) {
+        Package pkg = EnableConfigServer.class.getPackage();
+        logger.info("{} {} by {}", pkg.getImplementationTitle(), pkg.getImplementationVersion(), pkg.getImplementationVendor());
+		SpringApplication.run(ConfigServer.class, args);
+	}
+
+}

@@ -15,10 +15,9 @@
     .DESCRIPTION
     Builds a specified Steeltoe Docker image.
 
-    By default, the image will be tagged using the name '<image>:[<version>[-<rev>]]' where:
-      image      the specified Image name
-      version    the value of 'IMAGE_VERSION' if specified in Dockerfile
-      rev        the value of 'IMAGE_REVISION' if specified in Dockerfile
+    The image is tagged '<registry>/<image>:<tag>' where <tag> is the value of -Tag if
+    specified; otherwise the image's metadata/IMAGE_VERSION when running in GitHub Actions;
+    otherwise 'dev' for local builds.
 
     .PARAMETER Help
     Print this message.
@@ -27,7 +26,8 @@
     List available images.
 
     .PARAMETER DisableCache
-    Disable caching of projects from start.spring.io.
+    Disable the Docker build layer cache. Only affects the UAA server; a no-op for the
+    Java images, which build from committed source.
 
     .PARAMETER Name
     Docker image name.
@@ -36,7 +36,10 @@
     Override the image tag.
 
     .PARAMETER Registry
-    Set the container registry. Defaults to dockerhub under steeltoeoss.
+    Set the container registry. Defaults to steeltoe.azurecr.io.
+
+    .PARAMETER SmokeTest
+    After building, run smoke-test.ps1 to start the image and verify the health endpoint returns HTTP 200.
 #>
 
 # -----------------------------------------------------------------------------
@@ -47,6 +50,7 @@ param (
     [Switch] $Help,
     [Switch] $List,
     [Switch] $DisableCache,
+    [Switch] $SmokeTest,
     [String] $Name,
     [String] $Tag,
     [String] $Registry
@@ -109,26 +113,17 @@ try {
         throw "No metadata found for $Name"
     }
 
-    if (!$Tag) {
-        if ($env:GITHUB_ACTIONS -eq "true") {
-            $ImageNameWithTag = "$DockerOrg/${Name}:$Version"
-            $Revision = (Get-Content (Join-Path $ImageDirectory "metadata" "IMAGE_REVISION") -ErrorAction SilentlyContinue | ForEach-Object { $_.Trim() }) -join ""
-            if ($Revision -and $Revision -ne "") {
-                $ImageNameWithTag += "-$Revision"
-            }
-            $AdditionalTags = "$(Get-Content (Join-Path $ImageDirectory "metadata" "ADDITIONAL_TAGS") -ErrorAction SilentlyContinue | ForEach-Object { $_.replace("$Name","$DockerOrg/$Name") })"
-        }
-        else {
-            $ImageNameWithTag = "$DockerOrg/${Name}:dev"
-            $AdditionalTags = ""
-        }
+    if ($Tag) {
+        $ImageNameWithTag = "$DockerOrg/${Name}:$Tag"
+    }
+    elseif ($env:GITHUB_ACTIONS -eq "true") {
+        $ImageNameWithTag = "$DockerOrg/${Name}:$Version"
     }
     else {
-        $ImageNameWithTag = "$DockerOrg/${Name}:$Tag"
-        $AdditionalTags = ""
+        $ImageNameWithTag = "$DockerOrg/${Name}:dev"
     }
 
-    Write-Host "This image will be available as: $ImageNameWithTag $AdditionalTags"
+    Write-Host "This image will be available as: $ImageNameWithTag"
 
     if ($Name -eq "uaa-server") {
         $Dockerfile = Join-Path $ImageDirectory Dockerfile
@@ -144,32 +139,15 @@ try {
             $NoCacheArg = ""
         }
 
-        $docker_command = "docker build $NoCacheArg -t $ImageNameWithTag $AdditionalTags $ImageDirectory --build-arg SERVER_VERSION=$Version"
+        $docker_command = "docker build $NoCacheArg -t $ImageNameWithTag $ImageDirectory --build-arg SERVER_VERSION=$Version"
         Write-Host $docker_command
         Invoke-Expression $docker_command
     }
     else {
-        if (!(Get-Command "git" -ErrorAction SilentlyContinue)) {
-            throw "'git' command not found"
-        }
-
-        switch ($Name) {
-            "config-server" {
-                $appName = "ConfigServer"
-                $dependencies = "cloud-config-server,actuator,cloud-eureka,security"
-            }
-            "eureka-server" {
-                $appName = "EurekaServer"
-                $dependencies = "cloud-eureka-server,actuator"
-            }
-            "spring-boot-admin" {
-                $appName = "SpringBootAdmin"
-                $dependencies = "codecentric-spring-boot-admin-server"
-            }
-            Default {
-                Write-Host "$Name is not currently supported by this script"
-                exit 2
-            }
+        $supportedImages = @("config-server", "eureka-server", "spring-boot-admin")
+        if ($Name -notin $supportedImages) {
+            Write-Host "$Name is not currently supported by this script"
+            exit 2
         }
 
         $workPath = "workspace"
@@ -179,13 +157,10 @@ try {
         Push-Location $workPath
         try {
             $serverName = $Name -replace '-', ''
-            $JVM = "25"
-            $bootVersion = Get-Content (Join-path $ImageDirectory "metadata" "SPRING_BOOT_VERSION")
-            $serverVersion = Get-Content (Join-Path $ImageDirectory "metadata" "IMAGE_VERSION")
-            $artifactName = "$serverName$serverVersion-boot$bootVersion-jvm$JVM.zip"
+            $Version = Get-Content (Join-Path $ImageDirectory "metadata" "IMAGE_VERSION")
 
-            Write-Host "Building server: $Name@$serverVersion on Spring Boot $bootVersion"
-            Write-Host "Source files: $ImageDirectory"
+            Write-Host "Building server: $Name@$Version"
+            Write-Host "Source files: $ImageDirectory/source"
             Write-Host "Working directory: $PWD"
 
             # Ensure clean workspace
@@ -194,53 +169,66 @@ try {
                 throw "Failed to remove existing workspace $serverName"
             }
 
-            if ($DisableCache -And (Test-Path "$artifactName")) {
-                Write-Host "Removing previously downloaded $artifactName"
-                Remove-Item -Force "$artifactName"
+            # Copy source from committed directory
+            $sourceDir = Join-Path $ImageDirectory "source"
+            if (!(Test-Path $sourceDir)) {
+                throw "Source directory not found at $sourceDir. Run update-project.ps1 first."
             }
 
-            # Scaffold project on start.spring.io
-            if (!(Test-Path "$artifactName")) {
-                Write-Host "Using start.spring.io to create project with dependencies: $dependencies"
-                Invoke-WebRequest `
-                    -Uri "https://start.spring.io/starter.zip" `
-                    -Method Post `
-                    -Body @{
-                        type            = "gradle-project"
-                        bootVersion     = $bootVersion
-                        javaVersion     = $JVM
-                        groupId         = "io.steeltoe.docker"
-                        artifactId      = $serverName
-                        name            = $appName
-                        applicationName = $appName
-                        description     = "$appName for local development with Steeltoe"
-                        language        = "java"
-                        dependencies    = $dependencies
-                        version         = $serverVersion
-                    } `
-                    -OutFile $artifactName
+            Copy-Item -Path $sourceDir -Destination $serverName -Recurse -Force
+
+            # gradle-wrapper.jar is not committed to source; download it from the Gradle GitHub repo
+            $wrapperJarPath = Join-Path $serverName "gradle" "wrapper" "gradle-wrapper.jar"
+            $wrapperPropertiesPath = Join-Path $serverName "gradle" "wrapper" "gradle-wrapper.properties"
+            $wrapperPropertiesContent = Get-Content $wrapperPropertiesPath -Raw
+            if ($wrapperPropertiesContent -match 'distributionUrl=.*gradle-(\d+(?:\.\d+)+)-') {
+                $gradleVersion = $Matches[1]
             }
             else {
-                Write-Host "Using cached download from start.spring.io ($artifactName)"
+                throw "Could not determine Gradle version from $wrapperPropertiesPath"
             }
 
-            New-Item -ItemType Directory -Path $serverName | Out-Null
-            Expand-Archive -Path $artifactName -DestinationPath $serverName -Force
+            if (!(Test-Path $wrapperJarPath)) {
+                Write-Host "Downloading gradle-wrapper.jar for Gradle $gradleVersion..."
+                Invoke-WebRequest `
+                    -Uri "https://raw.githubusercontent.com/gradle/gradle/v$gradleVersion/gradle/wrapper/gradle-wrapper.jar" `
+                    -OutFile $wrapperJarPath `
+                    -UseBasicParsing
+            }
+
+            # Validate the wrapper jar against Gradle's published checksum so a tampered or
+            # truncated download can never run on a build machine (supply-chain integrity).
+            $shaContent = (Invoke-WebRequest `
+                -Uri "https://services.gradle.org/distributions/gradle-$gradleVersion-wrapper.jar.sha256" `
+                -UseBasicParsing).Content
+            if ($shaContent -is [byte[]]) {
+                $shaContent = [System.Text.Encoding]::ASCII.GetString($shaContent)
+            }
+            $expectedSha = $shaContent.Trim().ToLower()
+            $actualSha = (Get-FileHash -Algorithm SHA256 -Path $wrapperJarPath).Hash.ToLower()
+            if ($actualSha -ne $expectedSha) {
+                throw "gradle-wrapper.jar checksum mismatch for Gradle $gradleVersion (expected $expectedSha, got $actualSha)"
+            }
+            Write-Host "Verified gradle-wrapper.jar checksum ($actualSha)"
 
             Push-Location $serverName
             try {
-                # Apply patches
-                foreach ($patch in Get-ChildItem -Path (Join-Path $ImageDirectory patches) -Filter "*.patch") {
-                    Write-Host "Applying patch $($patch.Name)"
-                    git apply --unidiff-zero --recount --ignore-whitespace $patch.FullName
-                    if ($LASTEXITCODE -ne 0) {
-                        throw "Patch $($patch.Name) failed with exit code $LASTEXITCODE"
-                    }
-                    Write-Host "Patch $($patch.Name) applied successfully"
+                # Ensure gradlew is executable (git does not preserve the execute bit on Windows)
+                if ($IsLinux -or $IsMacOS) {
+                    & chmod +x gradlew
                 }
 
                 # Build the image
+                # Use the commit timestamp as the image creation date so identical source
+                # produces an identical image digest. Falls back to the build.gradle default
+                # (a fixed epoch) when git or commit metadata is unavailable.
                 $gradleArgs = @("bootBuildImage", "--imageName=$ImageNameWithTag")
+                if (Get-Command git -ErrorAction SilentlyContinue) {
+                    $createdDate = (& git -C $ImagesDirectory show -s --format=%cI HEAD 2>$null)
+                    if ($LASTEXITCODE -eq 0 -and $createdDate) {
+                        $gradleArgs += "-PimageCreatedDate=$($createdDate.Trim())"
+                    }
+                }
                 if ($env:GITHUB_ACTIONS -eq "true") {
                     $gradleArgs += "--no-daemon"
                 }
@@ -250,15 +238,15 @@ try {
             finally {
                 Pop-Location
             }
-
-            foreach ($AdditionalTag in $AdditionalTags.Split(" ", [System.StringSplitOptions]::RemoveEmptyEntries)) {
-                Write-Host "Running 'docker tag $ImageNameWithTag $AdditionalTag'"
-                docker tag $ImageNameWithTag $AdditionalTag
-            }
         }
         finally {
             Pop-Location  # workspace
         }
+    }
+
+    if ($SmokeTest) {
+        $resolvedTag = ($ImageNameWithTag -split ':')[-1]
+        & "$ImagesDirectory/smoke-test.ps1" -Name $Name -Registry $DockerOrg -Tag $resolvedTag
     }
 }
 catch {

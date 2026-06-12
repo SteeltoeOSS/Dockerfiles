@@ -6,12 +6,20 @@
 # Vi/Vim
 *.swp
 
-# Gradle
-/.gradle/
+# Gradle / IDE build output
+.gradle/
 build/
+bin/
 
 # MacOS
 .DS_Store
 
-# Staging directory
+# Staging/temp directories created by build.ps1 and update-project.ps1.
+# Deleted on success, but gitignored in case of a crash.
 workspace/
+
+# Gradle wrapper jar is downloaded at build time, not committed to source
+**/gradle/wrapper/gradle-wrapper.jar
+
+# Spring Initializr boilerplate — no value in committed source
+**/source/HELP.md
