@@ -84,6 +84,12 @@
 
     # List of OAuth clients
     clients:
+      admin:
+        authorities: clients.read,clients.write,clients.secret,clients.admin,scim.read,scim.write,uaa.admin
+        authorized-grant-types: client_credentials
+        description: "Admin client for managing UAA via uaac"
+        scope: uaa.admin
+        secret: adminsecret
       # ----- <Freddy's BBQ> ----- #
       admin-portal:
         app-launch-url: http://localhost:63757/Home/
