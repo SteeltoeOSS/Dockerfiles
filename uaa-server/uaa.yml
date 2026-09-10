@@ -141,6 +141,7 @@
         resource_ids: sampleapi.read
         scope: openid,profile,sampleapi.read
         secret: sso_secret
+      # --- </Steeltoe Security Samples> --- #
   jwt:
     token:
       refresh:
