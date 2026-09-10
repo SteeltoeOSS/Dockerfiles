@@ -137,7 +137,7 @@
         - openid
         - profile
         description: Credentials for use with UAA server in Cloud Foundry environment
-        redirect-uri: ${SSOTILE_REDIRECT_URI:http://localhost:8080}
+        redirect-uri: http://localhost:8080
         resource_ids: sampleapi.read
         scope: openid,profile,sampleapi.read
         secret: sso_secret
