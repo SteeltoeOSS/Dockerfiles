@@ -34,7 +34,7 @@ jobs:
 
     steps:
     - name: Git checkout
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         persist-credentials: false
 
@@ -50,7 +50,7 @@ jobs:
 
     - name: Set up JDK 25
       if: steps.filter.outputs.skip != 'true' && matrix.image != 'uaa-server'
-      uses: actions/setup-java@v5
+      uses: actions/setup-java@v6
       with:
         distribution: temurin
         java-version: '25'
