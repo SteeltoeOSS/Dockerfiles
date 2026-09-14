@@ -131,10 +131,7 @@
         - openid
         - profile
         description: Credentials for use with UAA server in Cloud Foundry environment
-
-        # CHANGE THIS VALUE TO MATCH YOUR ENVIRONMENT
-        redirect-uri: https://steeltoe.login.sys.dhaka.cf-app.com/**
-
+        redirect-uri: http://localhost:8080
         resource_ids: sampleapi.read
         scope: openid,profile,sampleapi.read
         secret: sso_secret
